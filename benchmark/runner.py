@@ -426,14 +426,8 @@ class BenchmarkRunner:
         if timeout_seconds is None:
             timeout_seconds = config_loader.get_task_timeout()
         
-        # Initialize judge provider once for this task execution
-        if not hasattr(self, '_judge_provider') or self._judge_provider is None:
-            azure_client = AsyncAzureOpenAI(
-                azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-                api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-                api_version=config_loader.get_azure_api_version()
-            )
-            self._judge_provider = LLMProvider(azure_client, "o4-mini", "azure")
+        # Use the provided LLM provider as judge provider (same model for task execution and judging)
+        self._judge_provider = llm_provider
         
         # Step 1: Prepare task execution information
         task_execution_info = await self._prepare_task_execution(task_info)

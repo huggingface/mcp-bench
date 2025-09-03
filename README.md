@@ -30,6 +30,40 @@ Then install the MCP dependencies:
 pushd mcp_servers && bash ./install-no-sudo.sh && popd
 ```
 
+**Configure MCP Server API Keys**
+
+Some MCP servers require external API keys to function properly. These keys are automatically loaded from `./mcp_servers/api_key`. You should set these keys by yourself in file `./mcp_servers/api_key`:
+
+```bash
+# View configured API keys
+cat ./mcp_servers/api_key
+```
+
+One of these keys is a `HF_TOKEN`, so Lewis has created a [dummy user `h4-bot`](https://huggingface.co/h4-bot) with limited Hub access. You can find the rest of the keys on the HFC [/fsx/lewis/git/hf/mcp-bench/mcp_servers/api_key](/fsx/lewis/git/hf/mcp-bench/mcp_servers/api_key).
+
+**Test everything works**
+
+Spin up a vLLM server:
+
+```sh
+vllm serve meta-llama/Llama-3.1-8B-Instruct --port 8000 --host 0.0.0.0
+```
+
+Create a `.env` file with these values:
+
+```
+export LLAMA_3_1_8B_API_KEY="dummy-key"
+export LLAMA_3_1_8B_BASE_URL="http://localhost:8000/v1"
+export LLAMA_3_1_8B_MODEL="meta-llama/Llama-3.1-8B-Instruct"
+```
+
+Then run the test benchmark:
+
+```sh
+source .env && python run_benchmark.py --models llama-3-1-8b --tasks-file test_minimal.json --distraction-count 0 --disable-judge-stability
+```
+
+If everything works, you'll see the results stored in `benchmark_results_{timestamp}.json`.
 
 ## Overview
 
