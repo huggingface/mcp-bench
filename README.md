@@ -49,21 +49,33 @@ Spin up a vLLM server:
 vllm serve meta-llama/Llama-3.1-8B-Instruct --port 8000 --host 0.0.0.0
 ```
 
-Create a `.env` file with these values:
-
-```
-export LLAMA_3_1_8B_API_KEY="dummy-key"
-export LLAMA_3_1_8B_BASE_URL="http://localhost:8000/v1"
-export LLAMA_3_1_8B_MODEL="meta-llama/Llama-3.1-8B-Instruct"
-```
-
 Then run the test benchmark:
 
 ```sh
-source .env && python run_benchmark.py --models llama-3-1-8b --tasks-file test_minimal.json --distraction-count 0 --disable-judge-stability
+HUGGINGFACE_BASE_URL="http://localhost:8000/v1" python run_benchmark.py --models huggingface --tasks-file test_minimal.json --distraction-count 0 --disable-judge-stability
 ```
 
 If everything works, you'll see the results stored in `benchmark_results_{timestamp}.json`.
+
+To run on all or a subset of tasks run:
+
+```sh
+export HUGGINGFACE_BASE_URL="http://localhost:8000/v1"
+## run all tasks
+python run_benchmark.py --models huggingface
+
+## single server tasks
+python run_benchmark.py --models huggingface \
+--tasks-file tasks/mcpbench_tasks_single_runner_format.json
+
+## two server tasks
+python run_benchmark.py --models huggingface \
+--tasks-file tasks/mcpbench_tasks_multi_2server_runner_format.json
+
+## three server tasks
+python run_benchmark.py --models huggingface \
+--tasks-file tasks/mcpbench_tasks_multi_3server_runner_format.json
+```
 
 ## Overview
 
