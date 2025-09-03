@@ -9,6 +9,7 @@ Classes:
 """
 
 import os
+import requests
 from typing import Dict, Any
 from openai import AsyncOpenAI, AsyncAzureOpenAI
 from .provider import LLMProvider
@@ -53,6 +54,27 @@ class LLMFactory:
         >>> configs = LLMFactory.get_model_configs()
         >>> provider = await LLMFactory.create_llm_provider(configs["gpt-4o"])
     """
+    
+    @staticmethod
+    def _detect_vllm_model(base_url: str) -> str:
+        """Detect the model name served by vllm by querying /v1/models endpoint.
+        
+        Args:
+            base_url: The base URL of the vllm server
+            
+        Returns:
+            The model name served by vllm, or "auto" if detection fails
+        """
+        try:
+            models_url = f"{base_url}/models"
+            response = requests.get(models_url, timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("data") and len(data["data"]) > 0:
+                    return data["data"][0]["id"]
+        except Exception:
+            pass
+        return "auto"
     
     @staticmethod
     def get_model_configs() -> Dict[str, ModelConfig]:
@@ -314,6 +336,22 @@ class LLMFactory:
                     base_url=os.getenv(f"{env_prefix}_BASE_URL"),
                     model_name=os.getenv(f"{env_prefix}_MODEL")
                 )
+        
+        # Generic Hugging Face model configuration
+        if os.getenv("HUGGINGFACE_API_KEY") or os.getenv("HUGGINGFACE_BASE_URL"):
+            base_url = os.getenv("HUGGINGFACE_BASE_URL", "http://localhost:8000/v1")
+            model_name = os.getenv("HUGGINGFACE_MODEL")
+            if not model_name:
+                # Auto-detect model name from vllm server
+                model_name = LLMFactory._detect_vllm_model(base_url)
+            
+            configs["huggingface"] = ModelConfig(
+                name="huggingface",
+                provider_type="openai_compatible",
+                api_key=os.getenv("HUGGINGFACE_API_KEY", "dummy-key"),
+                base_url=base_url,
+                model_name=model_name
+            )
         
         return configs
     
