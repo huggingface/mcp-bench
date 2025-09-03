@@ -7,6 +7,30 @@
 
 ![MCP-Bench](./images/mcpbench_intro.png)
 
+## 🍴 Fork Instructions
+
+To run the code in this project, first, create a Python virtual environment using e.g. `uv`.
+To install `uv`, follow the [UV Installation Guide](https://docs.astral.sh/uv/getting-started/installation/).
+
+
+```shell
+uv self update
+uv venv mcpbench --python 3.11 && source mcpbench/bin/activate && uv pip install --upgrade pip
+```
+
+Next, install vLLM:
+
+```shell
+uv pip install vllm==0.10.0
+```
+
+Then install the MCP dependencies:
+
+```shell
+pushd mcp_servers && bash ./install-no-sudo.sh && popd
+```
+
+
 ## Overview
 
 MCP-Bench is a comprehensive evaluation framework designed to assess Large Language Models' (LLMs) capabilities in tool-use scenarios through the Model Context Protocol (MCP). This benchmark provides an end-to-end pipeline for evaluating how effectively different LLMs can discover, select, and utilize tools to solve real-world tasks.
