@@ -101,19 +101,10 @@ function wait_for_server {
 
     echo "$name server is up and running."
 }
-    
-# Determine tensor parallel size
-if [[ -n "$CUDA_VISIBLE_DEVICES" ]]; then
-  IFS=, read -ra GPUS <<< "$CUDA_VISIBLE_DEVICES"
-  VISIBLE_COUNT=${#GPUS[@]}
-else
-  VISIBLE_COUNT=$(nvidia-smi -L | wc -l)
-fi
-TP=${TENSOR_PARALLEL:-$VISIBLE_COUNT}
 
 echo "Starting agent vLLM server on port 8000 with TP=$TP..."
 nohup vllm serve $MODEL_ID --revision $MODEL_REVISION \
-    --tensor-parallel-size "$TP" \
+    --tensor-parallel-size 8 \
     --trust-remote-code \
     --host 0.0.0.0 --port 8000 \
     >"$OUTPUT_DIR/llm_agent_8000.log" 2>&1 &

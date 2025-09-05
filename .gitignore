@@ -60,6 +60,7 @@ Thumbs.db
 *.temp
 .cache/
 cache/
+eval_results/
 
 # API keys
 mcp_servers/api_key
