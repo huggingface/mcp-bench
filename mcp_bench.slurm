@@ -133,6 +133,7 @@ nohup vllm serve $MODEL_ID --revision $MODEL_REVISION \
     --trust-remote-code \
     --enable-auto-tool-choice \
     --tool-call-parser $TOOL_PARSER \
+    --cache-dir $OUTPUT_DIR/cache \
     --host 0.0.0.0 --port 8000 \
     >"$OUTPUT_DIR/llm_agent_8000.log" 2>&1 &
 
