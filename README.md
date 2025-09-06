@@ -52,7 +52,7 @@ vllm serve meta-llama/Llama-3.1-8B-Instruct --port 8000 --host 0.0.0.0
 Then run the test benchmark:
 
 ```sh
-HUGGINGFACE_BASE_URL="http://localhost:8000/v1" python run_benchmark.py --models huggingface --tasks-file test_minimal.json --distraction-count 0 --disable-judge-stability
+HUGGINGFACE_BASE_URL="http://localhost:8000/v1" python run_benchmark.py --models huggingface --tasks-file tasks/test_minimal.json --distraction-count 0 --disable-judge-stability
 ```
 
 If everything works, you'll see the results stored in `benchmark_results_{timestamp}.json`.
