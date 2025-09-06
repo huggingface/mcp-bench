@@ -46,6 +46,27 @@ function shutdown_servers {
 }
 trap shutdown_servers EXIT ERR SIGINT SIGTERM
 
+# Function to determine tool call parser based on model ID
+function get_tool_parser {
+    local model_id="$1"
+    case "$model_id" in
+        *deepseek*|*DeepSeek*) echo "deepseek_v3" ;;
+        *kimi*|*Kimi*) echo "kimi_k2" ;;
+        *minimax*|*MiniMax*) echo "minimax_m1" ;;
+        *hunyuan*|*Hunyuan*) echo "hunyuan_a13b" ;;
+        *granite*|*Granite*) echo "granite" ;;
+        *xlam*|*xLAM*) echo "xlam" ;;
+        *jamba*|*Jamba*) echo "jamba" ;;
+        *internlm*|*InternLM*) echo "internlm" ;;
+        *mistral*|*Mistral*) echo "mistral" ;;
+        *llama*|*Llama*) echo "llama3_json" ;;
+        *qwen*|*Qwen*|*hermes*|*Hermes*|*nous-hermes*) echo "hermes" ;;
+        *)
+            echo "ERROR: No tool call parser found for model: $model_id" >&2
+            echo "Supported patterns: deepseek, kimi, minimax, hunyuan, granite, xlam, jamba, internlm, mistral, llama, qwen, hermes" >&2
+            exit 1 ;;
+    esac
+}
 
 MODEL_ID=$1
 MODEL_REVISION=$2
@@ -74,6 +95,10 @@ mkdir -p "$OUTPUT_DIR"
 ACCELERATE_USE_DEEPSPEED=false
 
 NUM_GPUS=$(nvidia-smi -L | wc -l)
+
+# Determine appropriate tool call parser for this model
+TOOL_PARSER=$(get_tool_parser "$MODEL_ID")
+echo "Using tool call parser: $TOOL_PARSER for model: $MODEL_ID"
 
 # Function to check if server is up by checking /health endpoint
 function check_server {
@@ -106,6 +131,8 @@ echo "Starting agent vLLM server on port 8000 with TP=$TP..."
 nohup vllm serve $MODEL_ID --revision $MODEL_REVISION \
     --tensor-parallel-size 8 \
     --trust-remote-code \
+    --enable-auto-tool-choice \
+    --tool-call-parser $TOOL_PARSER \
     --host 0.0.0.0 --port 8000 \
     >"$OUTPUT_DIR/llm_agent_8000.log" 2>&1 &
 
