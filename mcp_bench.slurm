@@ -133,7 +133,6 @@ nohup vllm serve $MODEL_ID --revision $MODEL_REVISION \
     --trust-remote-code \
     --enable-auto-tool-choice \
     --tool-call-parser $TOOL_PARSER \
-    --cache-dir $OUTPUT_DIR/cache \
     --host 0.0.0.0 --port 8000 \
     >"$OUTPUT_DIR/llm_agent_8000.log" 2>&1 &
 
@@ -143,7 +142,7 @@ wait_for_server 8000 "Agent"
 
 echo "Running mcp-bench evaluation ..."
 echo "Trajectories results will be saved to $OUTPUT_DIR"
-python run_benchmark.py --models huggingface
+python run_benchmark.py --models huggingface --cache-dir $OUTPUT_DIR/cache
 
 shutdown_servers
 

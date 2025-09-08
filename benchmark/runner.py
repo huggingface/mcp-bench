@@ -426,8 +426,12 @@ class BenchmarkRunner:
         if timeout_seconds is None:
             timeout_seconds = config_loader.get_task_timeout()
         
-        # Use the provided LLM provider as judge provider (same model for task execution and judging)
-        self._judge_provider = llm_provider
+        # Use separate judge provider if provided, otherwise fall back to execution provider
+        if self._judge_provider is None:
+            self._judge_provider = llm_provider
+            logger.info(f"Using execution model {model_name} for both task execution and evaluation judging")
+        else:
+            logger.info(f"Using separate judge provider for evaluation (execution: {model_name})")
         
         # Step 1: Prepare task execution information
         task_execution_info = await self._prepare_task_execution(task_info)
@@ -1071,6 +1075,12 @@ Examples:
     )
     
     parser.add_argument(
+        '--judge-provider',
+        metavar='MODEL',
+        help='Model to use for evaluation judging. If not specified, uses the same model as execution.'
+    )
+    
+    parser.add_argument(
         '--output',
         metavar='FILE',
         help='Output file for results (default: auto-generated timestamp name)'
@@ -1179,8 +1189,22 @@ def _parse_and_validate_args():
     
     return args, tasks_file, enable_distraction
 
-def _create_runner_and_get_models(args, tasks_file, enable_distraction):
+async def _create_runner_and_get_models(args, tasks_file, enable_distraction):
     """Create benchmark runner and get available models"""
+    # Create judge provider if specified
+    judge_provider = None
+    if args.judge_provider:
+        # Get available model configs
+        model_configs = LLMFactory.get_model_configs()
+        if args.judge_provider not in model_configs:
+            logger.error(f"Judge model '{args.judge_provider}' not available. Use --list-models to see available models.")
+            sys.exit(1)
+        
+        # Create the judge provider
+        judge_config = model_configs[args.judge_provider]
+        judge_provider = await LLMFactory.create_llm_provider(judge_config)
+        logger.info(f"Created separate judge provider: {args.judge_provider}")
+    
     runner = BenchmarkRunner(
         tasks_file=tasks_file,
         enable_distraction_servers=enable_distraction,
@@ -1188,7 +1212,8 @@ def _create_runner_and_get_models(args, tasks_file, enable_distraction):
         enable_judge_stability=not args.disable_judge_stability,
         filter_problematic_tools=not args.disable_filter_problematic_tools,
         concurrent_summarization=not args.disable_concurrent_summarization,
-        use_fuzzy_descriptions=not args.disable_fuzzy
+        use_fuzzy_descriptions=not args.disable_fuzzy,
+        judge_provider=judge_provider
     )
     available_models = list(runner.model_configs.keys())
     
@@ -1285,7 +1310,7 @@ async def main():
             logger.info(f"Existing cache: {stats['total_entries']} entries, {stats['total_accesses']} total accesses")
     
     # Step 2: Create runner and get available models
-    runner, available_models = _create_runner_and_get_models(args, tasks_file, enable_distraction)
+    runner, available_models = await _create_runner_and_get_models(args, tasks_file, enable_distraction)
     
     # Handle --list-models option
     if args.list_models:
