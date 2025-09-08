@@ -142,7 +142,10 @@ wait_for_server 8000 "Agent"
 
 echo "Running mcp-bench evaluation ..."
 echo "Trajectories results will be saved to $OUTPUT_DIR"
-python run_benchmark.py --models huggingface --cache-dir $OUTPUT_DIR/cache
+python run_benchmark.py --models huggingface \
+    --judge-provider o4-mini \
+    --output $OUTPUT_DIR/results.json \
+    --cache-dir $OUTPUT_DIR/cache
 
 shutdown_servers
 
