@@ -88,47 +88,56 @@ class LLMFactory:
         """
         configs = {}
         
-        # Azure OpenAI models
-        if os.getenv("AZURE_OPENAI_API_KEY") and os.getenv("AZURE_OPENAI_ENDPOINT"):
+        # OpenAI models
+        if os.getenv("OPENAI_API_KEY"):
             configs["o4-mini"] = ModelConfig(
                 name="o4-mini",
-                provider_type="azure",
-                api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-                endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-                deployment_name="o4-mini"
+                provider_type="openai",
+                api_key=os.getenv("OPENAI_API_KEY"),
+                model_name="o4-mini-2025-04-16"
             )
+
+        # Azure OpenAI models
+        # if os.getenv("AZURE_OPENAI_API_KEY") and os.getenv("AZURE_OPENAI_ENDPOINT"):
+        #     configs["o4-mini"] = ModelConfig(
+        #         name="o4-mini",
+        #         provider_type="azure",
+        #         api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+        #         endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        #         deployment_name="o4-mini"
+        #     )
             
-            configs["gpt-4o"] = ModelConfig(
-                name="gpt-4o",
-                provider_type="azure",
-                api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-                endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-                deployment_name="gpt-4o"
-            )
+        #     configs["gpt-4o"] = ModelConfig(
+        #         name="gpt-4o",
+        #         provider_type="azure",
+        #         api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+        #         endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        #         deployment_name="gpt-4o"
+        #     )
             
-            configs["gpt-4o-mini"] = ModelConfig(
-                name="gpt-4o-mini",
-                provider_type="azure",
-                api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-                endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-                deployment_name="gpt-4o-mini"
-            )
+        #     configs["gpt-4o-mini"] = ModelConfig(
+        #         name="gpt-4o-mini",
+        #         provider_type="azure",
+        #         api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+        #         endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        #         deployment_name="gpt-4o-mini"
+        #     )
             
-            configs["o3"] = ModelConfig(
-                name="o3",
-                provider_type="azure",
-                api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-                endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-                deployment_name="o3"
-            )
+        #     configs["o3"] = ModelConfig(
+        #         name="o3",
+        #         provider_type="azure",
+        #         api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+        #         endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        #         deployment_name="o3"
+        #     )
         
-            configs["gpt-5"] = ModelConfig(
-                name="gpt-5",
-                provider_type="azure",
-                api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-                endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-                deployment_name="gpt-5"
-            )
+        #     configs["gpt-5"] = ModelConfig(
+        #         name="gpt-5",
+        #         provider_type="azure",
+        #         api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+        #         endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        #         deployment_name="gpt-5"
+        #     )
         
         # OpenRouter models
         if os.getenv("OPENROUTER_API_KEY"):
@@ -372,7 +381,17 @@ class LLMFactory:
             ValueError: If provider type is not supported
         """
         
-        if model_config.provider_type == "azure":
+        if model_config.provider_type == "openai":
+            client = AsyncOpenAI(
+                api_key=model_config.config["api_key"]
+            )
+            return LLMProvider(
+                client=client,
+                deployment_name=model_config.config["model_name"],
+                provider_type="openai"
+            )
+            
+        elif model_config.provider_type == "azure":
             client = AsyncAzureOpenAI(
                 azure_endpoint=model_config.config["endpoint"],
                 api_key=model_config.config["api_key"],

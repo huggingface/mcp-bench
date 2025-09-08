@@ -46,13 +46,18 @@ One of these keys is a `HF_TOKEN`, so Lewis has created a [dummy user `h4-bot`](
 Spin up a vLLM server:
 
 ```sh
-vllm serve meta-llama/Llama-3.1-8B-Instruct --port 8000 --host 0.0.0.0
+vllm serve Qwen/Qwen3-4B-Instruct-2507 \
+    --port 8000 --host 0.0.0.0 \
+    --enable-auto-tool-choice --tool-call-parser hermes
 ```
+
+> [!NOTE]
+> Make sure the tool-call-parser is configured correctly - otherwise, you will get garbage results! See the [vLLM docs](https://docs.vllm.ai/en/stable/features/tool_calling.html).
 
 Then run the test benchmark:
 
 ```sh
-HUGGINGFACE_BASE_URL="http://localhost:8000/v1" python run_benchmark.py --models huggingface --tasks-file tasks/test_minimal.json --distraction-count 0 --disable-judge-stability
+HUGGINGFACE_BASE_URL="http://localhost:8000/v1" python run_benchmark.py --models huggingface --tasks-file tasks/test.json --distraction-count 0 --disable-judge-stability
 ```
 
 If everything works, you'll see the results stored in `benchmark_results_{timestamp}.json`.
