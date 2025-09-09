@@ -9,6 +9,7 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=lewis+hfc@huggingface.co
 
+# Usage: sbatch --qos=high --job-name=mcp-bench-qwen3-30b-a3b-concurrent --nodes=1 mcp_bench.slurm Qwen/Qwen3-30B-A3B-Instruct-2507 main
 
 # Specific configuration optimized for the Hugging Face Compute Cluster
 # Be ye warned this may not work on other clusters!
@@ -149,6 +150,9 @@ echo "Trajectories results will be saved to $OUTPUT_DIR"
 #     --output $OUTPUT_DIR/results.json \
 #     --cache-dir $OUTPUT_DIR/cache
 
+# Store benchmark PIDs
+BENCHMARK_PIDS=()
+
 # Run concurrent tasks
 for i in 0 1 2 3; do
     echo "Running task set $i..."
@@ -156,8 +160,15 @@ for i in 0 1 2 3; do
         --judge-provider o4-mini \
         --tasks-file tasks/single_server_${i}.json \
         --output $OUTPUT_DIR/results_single_server_${i}.json \
-        --cache-dir $OUTPUT_DIR/cache \
+        --cache-dir $OUTPUT_DIR/cache_single_server_${i} \
         >"$OUTPUT_DIR/single_server_${i}.log" 2>&1 &
+    
+    BENCHMARK_PIDS+=($!)  # Capture the PID of the background process
+done
+
+# Wait only for benchmark processes to complete
+for pid in "${BENCHMARK_PIDS[@]}"; do
+    wait $pid
 done
 
 shutdown_servers
