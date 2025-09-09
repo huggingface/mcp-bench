@@ -142,10 +142,23 @@ wait_for_server 8000 "Agent"
 
 echo "Running mcp-bench evaluation ..."
 echo "Trajectories results will be saved to $OUTPUT_DIR"
-python run_benchmark.py --models huggingface \
-    --judge-provider o4-mini \
-    --output $OUTPUT_DIR/results.json \
-    --cache-dir $OUTPUT_DIR/cache
+
+# Run all tasks
+# python run_benchmark.py --models huggingface \
+#     --judge-provider o4-mini \
+#     --output $OUTPUT_DIR/results.json \
+#     --cache-dir $OUTPUT_DIR/cache
+
+# Run concurrent tasks
+for i in 0 1 2 3; do
+    echo "Running task set $i..."
+    python run_benchmark.py --models huggingface \
+        --judge-provider o4-mini \
+        --tasks-file tasks/single_server_${i}.json \
+        --output $OUTPUT_DIR/results_single_server_${i}.json \
+        --cache-dir $OUTPUT_DIR/cache \
+        >"$OUTPUT_DIR/single_server_${i}.log" 2>&1 &
+done
 
 shutdown_servers
 
