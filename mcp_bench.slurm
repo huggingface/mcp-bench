@@ -153,7 +153,7 @@ echo "Trajectories results will be saved to $OUTPUT_DIR"
 # Store benchmark PIDs
 BENCHMARK_PIDS=()
 
-# Run concurrent tasks
+# Run single-server tasks
 for i in 0 1 2 3; do
     echo "Running task set $i..."
     python run_benchmark.py --models huggingface \
@@ -163,6 +163,32 @@ for i in 0 1 2 3; do
         --cache-dir $OUTPUT_DIR/cache_single_server_${i} \
         >"$OUTPUT_DIR/single_server_${i}.log" 2>&1 &
     
+    BENCHMARK_PIDS+=($!)  # Capture the PID of the background process
+done
+
+# Run double-server tasks
+for i in 0 1; do
+    echo "Running task set double $i..."
+    python run_benchmark.py --models huggingface \
+        --judge-provider o4-mini \
+        --tasks-file tasks/double_server_${i}.json \
+        --output $OUTPUT_DIR/results_double_server_${i}.json \
+        --cache-dir $OUTPUT_DIR/cache_double_server_${i} \
+        >"$OUTPUT_DIR/double_server_${i}.log" 2>&1 &
+
+    BENCHMARK_PIDS+=($!)  # Capture the PID of the background process
+done
+
+# Run triple-server tasks
+echo "Running task set triple..."
+for i in 0 1; do
+    python run_benchmark.py --models huggingface \
+        --judge-provider o4-mini \
+        --tasks-file tasks/triple_server_${i}.json \
+        --output $OUTPUT_DIR/results_triple_server_${i}.json \
+        --cache-dir $OUTPUT_DIR/cache_triple_server_${i} \
+        >"$OUTPUT_DIR/triple_server_${i}.log" 2>&1 &
+
     BENCHMARK_PIDS+=($!)  # Capture the PID of the background process
 done
 

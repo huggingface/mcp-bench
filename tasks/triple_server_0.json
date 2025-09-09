@@ -1,0 +1,277 @@
+{
+  "generation_info": {
+    "status": "completed"
+  },
+  "server_tasks": [
+    {
+      "server_name": "Google Maps+Weather Data+National Parks",
+      "tasks": [
+        {
+          "task_id": "google_maps_weather_data_national_parks_000",
+          "task_description": "You are planning a 3-day camping expedition to Yosemite National Park departing from San Jose, CA. Produce a detailed, self-contained itinerary that includes: 1) the top three campgrounds in Yosemite NP that have at least three amenities (e.g., showers, potable water, Wi-Fi), are not under any active alerts, and are open during the trip; 2) the operating hours of the nearest visitor center to your primary campground; 3) turn-by-turn driving directions from San Jose, CA to the primary campground and then to the visitor center; 4) travel distances and durations for all three campgrounds and the visitor center; 5) the elevation of the primary campground; 6) the upcoming 3-day weather forecast for Yosemite National Park; and 7) the nearest grocery store or convenience store within 5 km of the primary campground for resupply. Format your output as a structured JSON with sections: \"selected_campgrounds\" (name, parkCode, amenities, distance_m, duration_s), \"primary_itinerary\" (campground_name, visitor_center_name, visitor_center_hours, directions_to_campground[], directions_to_center[]), \"campground_elevation_meters\", \"weather_forecast_3_days\" (date, high_temp, low_temp, conditions), and \"nearest_resupply\" (name, distance_m, rating).",
+          "fuzzy_description": "Hey there—I’m gearing up for a quick three-day camping getaway to Yosemite from San Jose and, to be honest, I’m feeling a bit swamped by all the options and details. I’d love to zero in on the three best campgrounds that actually have real comforts—think showers, drinking water, maybe even Wi-Fi—are definitely open on my dates and aren’t under any alerts or closures right now. \n\nOnce I’ve got that shortlist, can you help me figure out roughly how far and how long it takes to drive from San Jose to each of those spots? I’m planning to settle into one as my “base camp,” so for that primary site it’d be great to know the nearest visitor center’s hours and exactly how to get there—like turn-by-turn directions, plus the distance and travel time. Also, what’s the elevation at that main campground? \n\nSince I want to pack smart, I really need a solid three-day weather outlook for Yosemite—nothing vague, just the highs, lows and general conditions for the next few days. And, just in case I run out of snacks or cooking supplies, is there a grocery or convenience store within about five kilometers of that first campground? \n\nI can’t just wing this trip, so any real numbers or solid reference points you can dig up would be awesome—no vague guesses, please. Thanks!\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "1. findParks → getParkDetails: Use findParks(stateCode='CA', q='Yosemite') to locate Yosemite NP and then getParkDetails(parkCode) to retrieve its geographic bounds. 2. getAlerts(parkCode): Check active alerts and filter out any campgrounds affected by closures or hazards. 3. getCampgrounds(parkCode): Retrieve all campgrounds. Filter for those with ≥3 amenities and not impacted by alerts. 4. getVisitorCenters(parkCode): Retrieve visitor centers and find the one nearest to the primary campground. 5. maps_geocode('San Jose, CA'): Convert departure city to coordinates. 6. maps_distance_matrix(origins=['San Jose, CA'], destinations=[campground addresses or coords, visitor center address]) in driving mode: Compute travel distances and durations for each campground and the visitor center. 7. Decision point: Rank campgrounds by amenity count and distance; select top 3. Designate the first as primary campground. 8. maps_directions(origin='San Jose, CA', destination=primary campground, mode='driving'): Fetch turn-by-turn directions. Then maps_directions(origin=primary campground, destination=nearest visitor center). 9. maps_elevation(locations=[{latitude,longitude} of primary campground]): Get elevation. 10. get_weather_forecast_tool(city='Yosemite National Park', days=3): Fetch the next 3-day weather forecast. 11. search_nearby(center={latitude,longitude} of primary campground, keyword='grocery', radius=5000, minRating=3): Find nearest resupply option. Parallel vs. sequential: Steps 2–4 must precede selection; steps 6–7 run once campgrounds and centers are identified; steps 8–11 can run in parallel once primary campground is chosen. Cross-server dependencies: National Parks data informs Google Maps lookups (addresses/coords), and park location is used for Weather Data queries. This chain ensures each tool’s output feeds into the next, with decision branches (alert filtering, amenity ranking) and cross-validation of location data across servers.",
+          "distraction_servers": [
+            "Bibliomantic",
+            "BioMCP",
+            "DEX Paprika",
+            "FruityVice",
+            "Huge Icons",
+            "Math MCP",
+            "Metropolitan Museum",
+            "NixOS",
+            "Scientific Computing",
+            "Unit Converter"
+          ]
+        }
+      ],
+      "servers": [
+        "Google Maps",
+        "Weather Data",
+        "National Parks"
+      ],
+      "combination_name": "Travel Planning Suite",
+      "combination_type": "three_server_combinations"
+    },
+    {
+      "server_name": "Google Maps+Weather Data+National Parks",
+      "tasks": [
+        {
+          "task_id": "google_maps_weather_data_national_parks_001",
+          "task_description": "Plan a 7-day multi-park hiking and camping itinerary starting and ending in Denver, CO. You must:\n1. Geocode “Denver, CO” to get its coordinates.\n2. Search for up to 10 national parks in Colorado (CO), Utah (UT), or Wyoming (WY) that offer both hiking and camping.\n3. Retrieve detailed information for each park, including geographic coordinates.\n4. Compute driving distances and durations from Denver to each park and select the three nearest parks by driving time.\n5. For each of the three selected parks:\n   a. Fetch current alerts, visitor center hours, campgrounds and upcoming events for the next 7 days.\n   b. Reverse-geocode the park’s coordinates to find the nearest town or landmark.\n   c. Obtain the current weather and a 7-day forecast for that town.\n   d. Search within a 20 km radius of the park coordinates for hotels.\n6. If any selected park has a hazardous alert or forecast precipitation probability over 50% on its planned visit day, reorder the park sequence to minimize weather and alert risk.\n7. Build a 3-leg round-trip driving route starting and ending in Denver, visiting each park in final order. For each leg:\n   a. Compute distance and duration.\n   b. Retrieve detailed turn-by-turn driving directions.\n   c. Sample elevation at the leg’s origin and destination points.\n8. Produce a daily schedule listing: park name, visit date, park description, alert summary, visitor center hours, campground availability, events, weather summary, nearest lodging options, driving time and distance, elevation change, and route directions.\n\nOutput as a JSON object with an array of 7 day-by-day itinerary entries.",
+          "fuzzy_description": "I’m trying to plan a week-long hiking and camping loop that starts and ends in Denver, and I’m hoping you can really nerd out with me on the details. I want to hit a few of the best parks in Colorado, Utah or Wyoming that have both solid trails and campgrounds, then narrow it down to the three closest ones by drive time so I’m not losing half my day on the road. From there, I’d love a day-by-day agenda for the next seven days that not only tells me which park I’m at and when, but also flags any active alerts or if there’s more than a 50% chance of rain that day (so we could switch things around if it looks dicey). \n\nOn top of that, I need to know what the visitor center hours are, where I can actually secure a campsite or catch an event, plus a quick weather snapshot each morning and night. If there’s a nearby town or landmark, I want to know about hotels in, say, a 20 km radius too—just in case I decide to splurge one night. And for each driving leg, could you give me the distance, drive time, a rough idea of elevation change, and turn-by-turn directions? I really need actual numbers backed up by real data—no hand-wavy guesses—because I’m sharing this with friends who expect concrete facts. Thanks!",
+          "dependency_analysis": "1. Initial mapping chain:\n   - Google Maps:maps_geocode( “Denver, CO” ) → originCoords\n   - National Parks:findParks(stateCode=\"CO,UT,WY\", activities=\"hiking,camping\", limit=10) → list of parkCodes\n2. Park detail expansion and selection:\n   - For each parkCode: National Parks:getParkDetails → {parkCode, name, description, coordinates}\n   - Use Google Maps:maps_distance_matrix(origins=[originCoords], destinations=[each park.coordinates], mode=\"driving\") to get drive times\n   - Sort by drive time and select top 3 parks → selectedParks\n3. Parallel per-park enrichment:\n   For each park in selectedParks:\n   a. National Parks:getAlerts(parkCode)\n   b. National Parks:getVisitorCenters(parkCode)\n   c. National Parks:getCampgrounds(parkCode)\n   d. National Parks:getEvents(parkCode, dateStart=\"today\", dateEnd=\"next 7 days\")\n   e. Google Maps:maps_reverse_geocode(latitude, longitude) → nearestTown\n   f. Weather Data:get_current_weather_tool(city=nearestTown)\n   g. Weather Data:get_weather_forecast_tool(city=nearestTown, days=7)\n   h. Google Maps:search_nearby(center={value:park.coordinates, isCoordinates:true}, keyword=\"hotel\", radius=20000)\n4. Conditional workflow:\n   - Evaluate each park’s alerts and its forecast for the planned visit date. If alerts include hazards or forecast.precipitation>50%, mark park as high-risk.\n   - If any high-risk parks exist, reorder selectedParks by ascending combined risk score (warnings + precipitation).\n5. Final route planning:\n   - Build a leg list: [\"Denver, CO\"] + reorderedParkCoordinates + [\"Denver, CO\"].\n   - Google Maps:maps_distance_matrix(origins=legs[0..-2], destinations=legs[1..-1], mode=\"driving\") → distances & durations per leg\n   - For each leg i:\n       • Google Maps:maps_directions(origin=legs[i], destination=legs[i+1], mode=\"driving\") → turn-by-turn steps\n       • Extract startCoord and endCoord → Google Maps:maps_elevation(locations=[startCoord, endCoord]) → elevations\n6. Data flow and cross-server dependencies:\n   - National Parks coordinates → Google Maps reverse geocode & search_nearby\n   - Reverse geocode town name → Weather Data current and forecast\n   - Distance and directions chains drive the final itinerary\n   - Conditional reordering ensures weather and alert cross-validation\n7. Execution order: sequential for initial geocode→parks search→distance ranking; parallel for per-park enrichment; conditional branch for itinerary ordering; sequential again for route mapping and elevation sampling.",
+          "distraction_servers": [
+            "BioMCP",
+            "Call for Papers",
+            "Car Price Evaluator",
+            "Huge Icons",
+            "Movie Recommender",
+            "NASA Data",
+            "OSINT Intelligence",
+            "Paper Search",
+            "Reddit",
+            "Scientific Computing"
+          ]
+        }
+      ],
+      "servers": [
+        "Google Maps",
+        "Weather Data",
+        "National Parks"
+      ],
+      "combination_name": "Travel Planning Suite",
+      "combination_type": "three_server_combinations"
+    },
+    {
+      "server_name": "Hugging Face+Paper Search+Wikipedia",
+      "tasks": [
+        {
+          "task_id": "hugging_face_paper_search_wikipedia_001",
+          "task_description": "You are a research engineer tasked with identifying and validating the current state-of-the-art text classification model for the AG News dataset, and cross-checking academic performance claims. Follow these steps without asking for more information:\n\n1. Use Hugging Face:search-datasets with query=\"ag news\", limit=5 to find the official AG News dataset ID.\n2. Call Hugging Face:get-dataset-info on the returned dataset_id to confirm it has exactly 4 classes and is in English. If it does not, abort with an error.\n3. Search for pre-trained text classification models fine-tuned on AG News:\n   • Use Hugging Face:search-models with query=\"ag news\", tags=\"text-classification\", author=\"\" (empty for no filter), limit=5.\n   • From the search results, select the top three models sorted by their reported evaluation metric F1 score (assume metadata contains a key \"f1\").\n4. For each of the three model_ids, call Hugging Face:get-model-info to retrieve architecture, model size, license, and the reported F1 score in the model card. Discard any model whose license is not an OSI-approved open-source license; if fewer than two remain, expand search-models to limit=10 and repeat selection.\n5. Identify the single Hugging Face model with the highest reported F1 score – call this Model_HF and record its model_id and F1_HF.\n6. Perform an academic literature search: use Paper Search:search_arxiv with query=\"AG News classification performance\", max_results=5 and select among returned metadata the paper published in the past 3 months with the highest reported F1 (you may inspect each metadata for a \"published\" date and \"f1\" field). Record its arxiv_id and F1_arxiv.\n7. Download and read the paper:\n   • Call Paper Search:download_arxiv with paper_id=arxiv_id.\n   • Then call Paper Search:read_arxiv_paper with the same paper_id to extract full text. Parse the extracted text to confirm the F1_arxiv value.\n8. Fetch definitions of evaluation metrics:\n   • Use Wikipedia:get_summary on title=\"F1 score\" to retrieve an overview of what a micro-averaged F1 score is.\n   • Use Wikipedia:extract_key_facts on title=\"F1 score\", topic_within_article=\"calculation formula\", count=3 to get the formula and key facts about how F1 is computed from precision and recall.\n9. Decision point – compare F1_arxiv vs. F1_HF:\n   • If F1_arxiv > F1_HF + 0.05 (5 percentage points), recommend adopting the academic approach (summarize the key architecture change from the paper) and outline a plan to fine-tune Model_HF using that method.\n   • Otherwise, recommend deploying Model_HF as is and note that no recent paper outperforms it by more than 5%. Include a brief summary of both performances and link model_id with arxiv_id for traceability.\n\nProvide your final output as a JSON object with:\n  • \"selected_model\": model_id and F1_HF\n  • \"paper_reference\": arxiv_id and F1_arxiv\n  • \"metric_definition_summary\": the summary and key facts from Wikipedia\n  • \"recommendation\": clear next steps as per the decision point above.",
+          "fuzzy_description": "I’m working on a project where I need to pick the very best news‐article classifier out there right now—specifically the one built for that 4-category news dataset (world, sports, business, tech). My boss wants me to find a publicly available, open-source model that has the highest F1 score, and then see if any fresh paper from the last three months has pushed the bar another 5 percentage points higher. \n\nIf a recent research write-up really beats the community model by at least 5 points in F1, I’d like to know what architectural tweak or training trick they used so I can apply it to the top model we found. If not, we’ll just roll with that open-source champion as is. Also, I need a quick, plain-English refresher on what a micro-averaged F1 score actually means and how it’s calculated—got to explain it clearly to stakeholders. \n\nCould you dig into this for me, pull together the model ID and its reported F1, track down any paper from roughly the past three months with its own F1, compare them, and then recommend next steps? Really need solid numbers and clear references so I’m not just guessing. Thanks!\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "This workflow uses a sequential and cross-server dependency chain: \n\n• Hugging Face search → fetch → filter chain: search-datasets → get-dataset-info → search-models → get-model-info feeds model metadata into a selection logic that may loop (expand limit if licenses disqualify models).\n\n• Decision point after get-dataset-info to validate dataset properties, with abort on mismatch.\n\n• Cross-server chaining: the selected dataset and model influence query terms in Paper Search:search_arxiv. search_arxiv output (arxiv_id, publication date, reported F1) selects the single paper to pass into download_arxiv → read_arxiv_paper for text extraction.\n\n• Wikipedia is used in parallel to the academic pipeline: once F1 metrics are known, Wikipedia:get_summary and Wikipedia:extract_key_facts provide definitions and formulas. These tools run independently of HF and Paper Search but their output is combined in the final recommendation.\n\n• Critical decision branches:\n   – If license filtering yields too few models, loop back to expand the search.\n   – If the paper’s F1 exceeds the top model’s F1 by >5 percentage points, branch to a fine-tuning recommendation; otherwise, branch to a deploy recommendation.\n\n• Cross-validation: model card F1 vs. paper-reported F1; definitions from Wikipedia to validate metric semantics.\n\n• The chain cannot proceed to later steps without outputs from prior tools (e.g., cannot search arXiv until HF dataset and model IDs are confirmed). This end-to-end dependency ensures the agent must orchestrate all tools in the specified order.",
+          "distraction_servers": [
+            "BioMCP",
+            "Car Price Evaluator",
+            "Context7",
+            "DEX Paprika",
+            "Game Trends",
+            "Google Maps",
+            "Movie Recommender",
+            "NixOS",
+            "Scientific Computing",
+            "Weather Data"
+          ]
+        }
+      ],
+      "servers": [
+        "Hugging Face",
+        "Paper Search",
+        "Wikipedia"
+      ],
+      "combination_name": "AI Research Hub",
+      "combination_type": "three_server_combinations"
+    },
+    {
+      "server_name": "Hugging Face+Paper Search+Wikipedia",
+      "tasks": [
+        {
+          "task_id": "hugging_face_paper_search_wikipedia_003",
+          "task_description": "You are asked to identify and evaluate the best open-source German→English machine translation model on Hugging Face Hub, cross-validate its reported performance with the primary research paper on arXiv, and enrich your findings with background from Wikipedia and live demos on Hugging Face Spaces. Specifically:\n\n1. Search Hugging Face models with query=\"translation\", tags=\"translation\", author=\"Helsinki-NLP\", limit=5 to retrieve the top 5 German→English translation models.\n2. For each returned model_id, fetch detailed metadata (including published BLEU scores) via get-model-info.\n3. Compare BLEU scores and select the model with the highest BLEU. If the top BLEU < 30, flag that performance is below industry benchmark; otherwise proceed.\n4. Use the selected model’s name in a Paper Search (arXiv) query: query=\"<model_name> BLEU German English translation\", max_results=3. Choose the first result.\n5. Download the chosen arXiv paper PDF and extract its full text. From the text, identify the section discussing evaluation methodology and record the exact reported BLEU score and test set used.\n6. Search Wikipedia for \"Machine translation\" (limit=5), get the summary of the article, then extract key facts (count=3) focused on \"evaluation metrics\" within that article.\n7. Cross-validate: compare the BLEU score and methodology from the arXiv paper with the score reported on Hugging Face. Note any discrepancies in reported test sets or preprocessing steps.\n8. Search Hugging Face Spaces with query=\"<selected_model_id>\", sdk=\"gradio\", limit=3. For each returned space_id, fetch its info and record which language pairs are supported in the demo and whether real-time translation latency is mentioned.\n9. Compile a structured report in JSON with the following fields:\n   - selected_model_id\n   - reported_bleu_hf\n   - reported_bleu_paper\n   - test_set_paper\n   - hf_vs_paper_discrepancy_note\n   - wikipedia_evaluation_facts (array of 3 facts)\n   - demo_spaces (array of objects: {space_id, supported_pairs, latency_mentioned})\n\nAll steps must use only the specified tools and the given concrete values. No external APIs or additional input are allowed.",
+          "fuzzy_description": "Hey, I’m working on a little side project where I need a solid German→English translation model, and I’ve heard the Helsinki team has some of the best open-source options—probably around five main candidates. I’d love to figure out which one actually tops the leaderboard in terms of BLEU score on the model hub, then dig into the team’s original pre-print to see what BLEU they reported there and exactly which test set they used. I’m also a bit fuzzy on how translation quality is typically measured—could you pull out three key facts about evaluation metrics from that big online encyclopedia article on machine translation? And one more thing: are there any community-run live demos for the model that wins? I’d like to know what language pairs they support and whether they mention any real-time latency numbers. I’m putting together a report for my manager, so I really need the exact BLEU figures, test-set names, and solid source references—no just gut feelings. Thanks!",
+          "dependency_analysis": "This task weaves a deep, sequential and cross-server dependency chain:\n\n1. Hugging Face model discovery chain:\n   - search-models → produces model_id list → get-model-info → yields BLEU scores. (inherent search→fetch pattern)\n   - Decision point: compare BLEU scores to choose top model or flag low performance.\n\n2. Cross-server branching:\n   - Paper Search (arXiv) input is parametrized by the selected model_name from get-model-info.\n   - search_arxiv → download_arxiv → read_arxiv_paper → yields evaluation section text and BLEU/test-set details.\n\n3. Wikipedia enrichment in parallel to validating metrics:\n   - search_wikipedia → get_summary → extract_key_facts (topic_within_article=\"evaluation metrics\", count=3).\n\n4. Demo validation chain on Hugging Face Spaces:\n   - search-spaces → takes selected_model_id as query → get-space-info → yields supported_pairs and latency data.\n\n5. Cross-validation decision logic:\n   - Compare hf reported_bleu vs. paper reported_bleu and test_set; if mismatch, note discrepancy. Combines outputs from HF and Paper Search.\n\n6. Parallel vs. sequential:\n   - Steps 1→3 are sequential (HF search→select→arXiv search→download→read).\n   - Step 6 (Wikipedia) and step 7 (Spaces) can run in parallel after model selection but both feed into final report.\n\n7. Data flows and transformation:\n   - Model info output sets parameters for arXiv and Spaces queries.\n   - PDF text is parsed to extract specific metrics (requires content parsing logic).\n\n8. Cross-server dependencies ensure the agent must integrate HF Hub data, academic paper data, and community documentation (Wikipedia) to produce a unified, validated evaluation report.",
+          "distraction_servers": [
+            "Car Price Evaluator",
+            "Math MCP",
+            "Metropolitan Museum",
+            "NASA Data",
+            "National Parks",
+            "OKX Exchange",
+            "OSINT Intelligence",
+            "OpenAPI Explorer",
+            "Unit Converter",
+            "Weather Data"
+          ]
+        }
+      ],
+      "servers": [
+        "Hugging Face",
+        "Paper Search",
+        "Wikipedia"
+      ],
+      "combination_name": "AI Research Hub",
+      "combination_type": "three_server_combinations"
+    },
+    {
+      "server_name": "Paper Search+Call for Papers+Wikipedia",
+      "tasks": [
+        {
+          "task_id": "paper_search_call_for_papers_wikipedia_000",
+          "task_description": "You are investigating state-of-the-art machine learning methods for real-time pandemic outbreak detection developed in the past 3 months. Execute the following steps without further questions:\n\n1. Simultaneously search these sources for 'machine learning pandemic detection' limited to the past 3 months, returning the top 5 results each:\n   • search_arxiv\n   • search_pubmed\n   • search_biorxiv\n   • search_medrxiv\n\n2. If search_pubmed returns fewer than 3 papers, perform an additional search_google_scholar for 'machine learning pandemic detection' to reach at least 3 PubMed-like results.\n\n3. For each paper from arXiv, bioRxiv, and medRxiv (all non-PubMed IDs), download its PDF with the corresponding download tool (download_arxiv, download_biorxiv, download_medrxiv) and save to './downloads'. For PubMed IDs, note that direct download is not supported.\n\n4. Read and extract the full text of each downloaded arXiv, bioRxiv, and medRxiv PDF with read_arxiv_paper, read_biorxiv_paper, and read_medrxiv_paper.\n\n5. For each extracted text, summarize the core algorithmic contribution with a 150-word summary per paper.\n\n6. From those summaries, extract the unique machine learning approach names (e.g., 'Graph Neural Network', 'Transformer-based classifier') and compile a deduplicated list of up to 5 methods.\n\n7. For each identified method, query Wikipedia:get_summary to obtain a concise definition of the method.\n\n8. Search upcoming conferences in the next 7 days to 1 month using get_events with keywords set to each method plus 'epidemiology' (e.g., 'Graph Neural Network epidemiology'), limiting to 5 events each.\n\n9. Produce a JSON report with:\n   • papers: list of all paper metadata (source, title, authors, ID, URL)\n   • summaries: mapping from paper ID to its 150-word summary\n   • methods: list of deduplicated method names\n   • definitions: mapping from method name to Wikipedia summary\n   • conferences: mapping from method name to the list of upcoming event names and dates\n\nAll tools must be invoked as described; do not proceed without using the tool outputs in dependent steps.",
+          "fuzzy_description": "Hey there! I’m working on a project to build a real-time pandemic outbreak detector, and I want to see what cutting-edge machine learning tricks have popped up in the last three months. Would you mind digging up about the top five preprint studies from the usual archives plus at least three peer-reviewed papers (if any of the archives don’t have enough, maybe grab a few extras via Google Scholar)? Then could you read through them and give me roughly a 150-word summary of each paper’s main algorithmic idea? Once you’ve got those, I’d love a list of the distinct ML approaches they’re using, a quick encyclopedia-style blurb on each technique, and a heads-up on any conferences or workshops in the next week to month where these methods will be featured. I really need concrete, source-backed details—no high-level fluff—so I can show solid evidence to my team. Thanks!",
+          "dependency_analysis": "Inherent Dependencies:\n- Standard workflow: search → download → read → summarize → extract methods.\n- Each 'search_*' tool produces paper metadata consumed by 'download_*' or fallback logic.\n- Download tools feed into 'read_*' tools to extract text for summarization.\n- Summarization output must be parsed to extract method names.\n- Extracted method names feed into Wikipedia:get_summary and Call for Papers:get_events.\n\nScenario-Based Dependencies:\n- Conditional branch: if search_pubmed yields <3, trigger search_google_scholar to supplement PubMed-like results.\n- Parallel searches across arXiv, PubMed, bioRxiv, medRxiv must be combined into a unified paper list.\n- Decision logic selects proper download tool based on paper source; PubMed papers skip download and are only metadata.\n- Summaries must be programmatically scanned to dedupe method names before querying Wikipedia and conferences.\n- Each method name parameterizes two downstream tools: Wikipedia:get_summary and Call for Papers:get_events.\n\nSequential vs. Parallel:\n- Steps 1 and 2: parallel searches with a conditional supplement.\n- Steps 3–5: per-paper download, read, and summarize can be parallelized but must follow download → read → summarize sequence per paper.\n- Steps 6–8: dependent on aggregate summaries; must finish all summaries before extracting methods and launching Wikipedia/get_events calls.\n\nCross-Server Dependencies:\n- Paper Search outputs supply IDs and titles for downstream downloads and reads.\n- Wikipedia summaries provide authoritative definitions feeding business-research context.\n- Call for Papers uses both paper-derived methods and Wikipedia definitions to formulate conference search keywords.\n- Fallback to Google Scholar if one source underperforms ensures coverage.\n\nCritical Decision Points:\n- Fallback to Google Scholar when PubMed returns fewer than 3 results.\n- Routing each paper to the correct download and read tool based on its server origin.\n- Deduplication of methods before querying secondary servers.\n\nThis dependency chain ensures that no step can proceed without the precise output of the previous tool calls, requiring comprehensive tool orchestration across Paper Search, Wikipedia, and Call for Papers servers.",
+          "distraction_servers": [
+            "Car Price Evaluator",
+            "Context7",
+            "DEX Paprika",
+            "Huge Icons",
+            "Math MCP",
+            "Medical Calculator",
+            "Movie Recommender",
+            "NixOS",
+            "OSINT Intelligence",
+            "Weather Data"
+          ]
+        }
+      ],
+      "servers": [
+        "Paper Search",
+        "Call for Papers",
+        "Wikipedia"
+      ],
+      "combination_name": "Academic Network",
+      "combination_type": "three_server_combinations"
+    },
+    {
+      "server_name": "Paper Search+Call for Papers+Wikipedia",
+      "tasks": [
+        {
+          "task_id": "paper_search_call_for_papers_wikipedia_002",
+          "task_description": "You are a biomedical research analyst focusing on machine-learning methods for predicting CRISPR-Cas9 off-target effects. Perform the following steps in one integrated workflow:\n\n1. In parallel, search for the query \"CRISPR Cas9 off-target prediction machine learning\" in five sources:\n   • search_arxiv with max_results=5\n   • search_pubmed with max_results=5\n   • search_biorxiv with max_results=5\n   • search_medrxiv with max_results=5\n   • search_google_scholar with max_results=5\n\n2. Aggregate all returned paper metadata. For each paper from arXiv, bioRxiv, and medRxiv:\n   a. Download the PDF via download_arxiv, download_biorxiv, or download_medrxiv.\n   b. Read the full text via read_arxiv_paper, read_biorxiv_paper, or read_medrxiv_paper.\n   c. Extract and summarize the core machine-learning methods and off-target prediction algorithm (the “Methods” section) in no more than 150 words.\n\n3. For PubMed and Google Scholar results (direct PDF download/read is unsupported):\n   a. Note the paper title, authors, and journal.\n   b. Extract the abstract from the metadata and summarize the methodological approach in no more than 100 words.\n\n4. Cross-validate the set of summarized methods:\n   • Identify overlaps in algorithm types (e.g., deep learning, random forest) across sources.\n   • Flag any unique or novel approaches found in only one server.\n\n5. Background consolidation:\n   a. From the aggregated methods keywords (e.g., “deep learning,” “SVM,” “transfer learning”), search Wikipedia for the article \"CRISPR\".\n   b. Use get_sections to locate the section titled \"Off-target Effects.\"\n   c. Summarize that section with summarize_article_section, max_length=200.\n\n6. Conference alignment:\n   • Use get_events from Call for Papers with keywords=\"CRISPR off-target\" and limit=5 to find upcoming conferences in the next 3 months.\n   • For each event, record name, dates, and whether any call for papers topics explicitly mention machine learning or off-target prediction.\n\n7. Final deliverable (in JSON):\n   {\n     \"papers\": [\n       {\"title\": string, \"source\": string, \"method_summary\": string, \"availability\": \"downloaded and read\" | \"abstract only\"}\n     ],\n     \"cross_validation\": {\"common_algorithms\": [string], \"unique_algorithms\": [string]},\n     \"wikipedia_off_target_summary\": string,\n     \"upcoming_conferences\": [\n       {\"name\": string, \"dates\": string, \"cfp_topics\": [string]}\n     ]\n   }",
+          "fuzzy_description": "I’m prepping for a journal club talk on CRISPR gene editing and keep hearing about new ways to predict Cas9 off-target effects with machine learning. I’ve been hopping between preprint archives, a big biomedical literature database and academic search engines, but I’m not confident I’ve caught all the important methods. Could you pull together roughly twenty of the most recent papers—get the full texts where you can and give me about a 150-word summary of each one’s off-target prediction approach (models, key features, that sort of thing)? For the ones that only have abstracts available, just boil down the methodology in around a hundred words. Once that’s done, let me know which algorithms (deep nets, random forests, etc.) keep popping up across multiple studies and which show up only once. Then I’d love a roughly 200-word overview from Wikipedia’s “Off-target Effects” section so I can frame the background. And finally, are there any CRISPR or genome-editing conferences coming up in the next three months with calls for papers mentioning off-target prediction or machine learning? Just send me their names, dates, and any topic descriptions they list. I really need real numbers, citations or links—no guesswork—since I’ll have to defend everything in front of the group.\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "Inherent dependencies:\n- Standard search → fetch → analyze chain for arXiv, bioRxiv, medRxiv: search_XXX produces paper IDs → download_XXX retrieves PDF → read_XXX_paper extracts text → AI summarization extracts Methods.\n- PubMed and Google Scholar searches yield metadata but download_pubmed and read_pubmed_paper are unsupported, forcing a fallback to metadata-only abstract summarization.\n\nScenario-based dependencies:\n- Parallel searches across five servers aggregate diverse sources before any further processing.\n- For each paper, a decision point examines whether download is supported (arXiv/bioRxiv/medRxiv) or not (PubMed/Google Scholar), triggering two different processing branches.\n- After individual summaries, a cross-validation step compares method keywords to identify overlaps and uniques.\n\nCross-server dependencies:\n- The extracted algorithm keywords from Paper Search results feed the Wikipedia query process: the Wikipedia search and section summarization depend on terms discovered in papers.\n- Conference search in Call for Papers uses the same off-target and machine-learning keywords derived from the paper analyses to find relevant events, linking Paper Search output to Call for Papers input.\n\nSequential vs. parallel:\n- Step 1 is fully parallel across servers; Steps 2–3 branch by server type; Step 4 recombines all outputs into a joint analysis; Steps 5–6 use aggregated findings to drive queries in other servers.\n\nCritical decision points:\n- Detect unsupported download/read tools for PubMed/Google Scholar and switch to abstract-only processing.\n- Identify when methods overlap sufficiently (>2 occurrences) to be marked as common vs. flagged as unique if seen only once.\n\nThis deep dependency chain ensures no single tool suffices: multiple searches, conditional download/read logic, inter-server data handoffs, and cross-validation across heterogeneous sources are all required for completion.",
+          "distraction_servers": [
+            "Bibliomantic",
+            "BioMCP",
+            "Car Price Evaluator",
+            "Context7",
+            "Game Trends",
+            "Google Maps",
+            "National Parks",
+            "NixOS",
+            "OpenAPI Explorer",
+            "Weather Data"
+          ]
+        }
+      ],
+      "servers": [
+        "Paper Search",
+        "Call for Papers",
+        "Wikipedia"
+      ],
+      "combination_name": "Academic Network",
+      "combination_type": "three_server_combinations"
+    },
+    {
+      "server_name": "Medical Calculator+FruityVice+BioMCP",
+      "tasks": [
+        {
+          "task_id": "medical_calculator_fruityvice_biomcp_000",
+          "task_description": "Perform a comprehensive cardiometabolic and nutritional assessment for a 60-year-old female patient with type 2 diabetes, hypertension, and hyperlipidemia. The agent must:\n\n1. Calculate her Body Mass Index (BMI) and Body Surface Area (BSA) using her weight (80 kg) and height (165 cm).\n2. Estimate her kidney function:\n   a. eGFR using the 2021 CKD-EPI Creatinine-Cystatin C equation with serum creatinine 1.2 mg/dL, cystatin C 1.1 mg/L, age 60, female.\n   b. Creatinine clearance with the Cockcroft‐Gault formula using age 60, weight 80 kg, height 65 in, serum creatinine 1.2 mg/dL, female.\n3. Compute her 10-year cardiovascular disease risk with PREVENT using: age 60, female, total cholesterol 240 mg/dL (convert to mmol/L), HDL 40 mg/dL (convert to mmol/L), SBP 150 mmHg, diabetes true, current_smoker true, eGFR from step 2a, using_antihypertensive true, using_statins true.\n4. Based on the computed 10-year CVD risk and guideline thresholds from the 2018 AHA/ACC cholesterol guidelines (found via BioMCP search and fetch), decide whether to escalate to high-intensity statin therapy.\n5. Calculate her CHA₂DS₂-VASc score with age 60, female true, congestive heart failure false, hypertension true, stroke_history false, vascular_disease false, diabetes true.\n6. Correct her serum sodium (measured 138 mEq/L) for hyperglycemia (glucose 250 mg/dL) and correct her serum calcium (measured 8.0 mg/dL) for albumin 2.5 g/dL.\n7. Calculate her maintenance IV fluid rate by 4-2-1 rule for weight 80 kg.\n8. Convert her current prednisone dose 5 mg/day to dexamethasone equivalent.\n9. Retrieve nutritional information for one medium apple and one medium banana to support a heart-healthy, low-glycemic diet.\n\nProduce a single structured report summarizing: BMI/BSA, eGFR, CrCl, CVD risk, statin recommendation, CHA₂DS₂-VASc score, corrected sodium/calcium, maintenance fluids rate, steroid conversion, and fruit nutrition tables.",
+          "fuzzy_description": "I’m looking after a 60-year-old woman who has type 2 diabetes, high blood pressure and high cholesterol, and I’m trying to pull together a full picture of her cardiometabolic and nutritional status—but I’m not totally confident I’ve got it all right. She’s roughly 80 kg and 165 cm tall, so I want to know her BMI and body surface area. For her kidney function, her creatinine is 1.2 mg/dL and cystatin C is 1.1 mg/L—do you think we should use the 2021 CKD-EPI creatinine-cystatin C equation to get her eGFR? And then I’d like a Cockcroft-Gault estimate of her creatinine clearance too.\n\nOn top of that, I need to figure out her 10-year risk of cardiovascular disease—she’s 60, female, total cholesterol is 240 mg/dL, HDL is 40 mg/dL, systolic blood pressure around 150 mmHg, she’s diabetic, a current smoker, already on antihypertensives and a statin. I’m thinking PREVENT might be appropriate, but I need that percentage so I can decide if she really belongs on high-intensity statin therapy per the latest AHA/ACC thresholds.\n\nWhile we’re crunching scores, could you also work out her CHA₂DS₂-VASc? She’s got hypertension and diabetes, no heart failure, no prior stroke or vascular disease, and of course she’s female. I’d also like to correct her serum sodium—measured at 138 mEq/L with a glucose of 250 mg/dL—and adjust her calcium, which is 8.0 mg/dL when albumin is 2.5 g/dL.\n\nI’ve been asked to set her maintenance IV fluid rate by the 4-2-1 rule for an 80 kg patient, and to convert her current prednisone dose of 5 mg/day into a dexamethasone equivalent. Finally, for her diet, I want to recommend a heart-healthy, low-glycemic plan—could you pull the nutrition facts for one medium apple and one medium banana?\n\nIn the end, I really need a concise summary with all the hard numbers—BMI, BSA, eGFR, creatinine clearance, CVD risk percent, statin recommendation, CHA₂DS₂-VASc score, corrected sodium and calcium, fluid rate, steroid conversion and the apple/banana nutrition info—so I can justify everything to my team with solid data, not just gut feeling.\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "Key tool chains and data flow:\n- Sequential medical calculators: bmi_bsa_calculator → egfr_epi_cr_cys → crcl_cockcroft_gault → prevent_cvd_risk.  The eGFR output feeds into the CVD risk tool.  \n- Decision point: PREVENT 10-year risk compared to threshold from AHA/ACC guidelines.  Requires BioMCP:think → BioMCP:search (domain=\"article\", query=\"2018 AHA/ACC cholesterol guidelines\") → BioMCP:fetch to obtain the risk threshold for high-intensity statin.  Based on risk ≥7.5%, decide therapy.\n- Parallel calculators: chads2_vasc_score runs independently for stroke risk; corrected_sodium and corrected_calcium run independently; maintenance_fluids and steroid_conversion run independently.\n- Cross-server dependencies:  Medical calculations inform BioMCP guideline decision; BioMCP search/fetch informs clinical decision for statin dosing; FruityVice:get_fruit_nutrition supplies dietary data integrated into the report.\n- Data transformation: convert total cholesterol (mg/dL) and HDL (mg/dL) into mmol/L before calling prevent_cvd_risk.  \n- The final report synthesizes outputs from Medical Calculator (server), FruityVice (server), and BioMCP (server) in a single structured summary, enforcing multi-server coordination and conditional logic based on intermediate results.",
+          "distraction_servers": [
+            "Bibliomantic",
+            "DEX Paprika",
+            "Huge Icons",
+            "Metropolitan Museum",
+            "Movie Recommender",
+            "National Parks",
+            "OSINT Intelligence",
+            "OpenAPI Explorer",
+            "Reddit",
+            "Unit Converter"
+          ]
+        }
+      ],
+      "servers": [
+        "Medical Calculator",
+        "FruityVice",
+        "BioMCP"
+      ],
+      "combination_name": "Health Platform",
+      "combination_type": "three_server_combinations"
+    },
+    {
+      "server_name": "Medical Calculator+FruityVice+BioMCP",
+      "tasks": [
+        {
+          "task_id": "medical_calculator_fruityvice_biomcp_001",
+          "task_description": "Design a personalized anticoagulation and analgesic management plan for a 70-year-old female patient with atrial fibrillation, type 2 diabetes, and stage 3 chronic kidney disease (CKD). All input data are given below. You must:  \n\n1. Initiate structured analysis with BioMCP:think (thoughtNumber=1, totalThoughts=7).  \n2. Perform a literature query using BioMCP:search with query=\"gene:CYP2C9 AND variant:CYP2C9*3 AND drug:warfarin\" to identify pharmacogenetic variants affecting warfarin dosing.  \n3. Fetch detailed variant information for rs1057910 using BioMCP:fetch.  \n4. Calculate renal function:  \n   • eGFR via CKD-EPI creatinine-cystatin C: scr=1.4 mg/dL, scys=1.5 mg/L, age=70, male=false (Medical Calculator:egfr_epi_cr_cys).  \n   • Cockcroft-Gault creatinine clearance: age=70, weight=70 kg, height=63 inches, scr=1.4 mg/dL, sex='female' (Medical Calculator:crcl_cockcroft_gault).  \n5. Compute ideal/adjusted body weight for dosing: weight_kg=70, height_inches=63, male=false (Medical Calculator:ibw_abw_calculator).  \n6. Based on eGFR result: if eGFR < 45 mL/min/1.73m2, apply a 25% dose reduction factor for both warfarin and oxycodone.  \n7. Calculate stroke risk with CHA₂DS₂-VASc: age=70, female=true, chf=false, hypertension=true, stroke_history=false, vascular_disease=false, diabetes=true (Medical Calculator:chads2_vasc_score).  \n8. Compute maintenance IV fluid rate using 4-2-1 rule: weight_kg=70 (Medical Calculator:maintenance_fluids).  \n9. Plan analgesic MME for oxycodone: opioid='oxycodone', dose_per_administration=5 mg, doses_per_day=3 (Medical Calculator:calculate_mme).  \n10. Investigate clinical trial evidence: search for trials in atrial fibrillation with genotype-guided warfarin dosing using BioMCP:trial_searcher with conditions=['Atrial Fibrillation'], interventions=['Warfarin'], other_terms=['genotype','pharmacogenetic'], phase='PHASE4'.  \n11. Fetch full protocol for the top NCT trial you find (e.g., NCT01830000) using BioMCP:trial_getter.  \n12. Evaluate dietary vitamin C impact: fetch nutritional data for 'orange' (FruityVice:get_fruit_nutrition).  \n\nAggregate all results into a final JSON object with the following structure:  \n{\n  \"variant_info\": {…},\n  \"renal_metrics\": {\"egfr\":…, \"crcl\":…},\n  \"weight_metrics\": {\"ibw\":…, \"abw\":…},\n  \"dose_adjustment_factor\": …,\n  \"stroke_risk\": {…},\n  \"maintenance_fluids_mL_per_hr\": …,\n  \"analgesic_mme_daily\": …,\n  \"trial_evidence\": {\"nct_id\":…, \"title\":…, \"design\":…},\n  \"orange_nutrition\": {…}\n}",
+          "fuzzy_description": "I’m working on a care plan for a 70-year-old woman who has atrial fibrillation, type 2 diabetes and stage 3 CKD, and I’m a bit stuck on how to personalize both her blood thinner and her pain meds. I’ve read that the CYP2C9*3 variant—especially rs1057910—can really change how much warfarin people need; could you dig up the detailed info on that polymorphism?  \n\nHer labs show a serum creatinine of 1.4 mg/dL and cystatin C of 1.5 mg/L. Using those values, what would her eGFR be if you ran the CKD-EPI equation with both creatinine and cystatin C? And if you plug her into Cockcroft-Gault (she’s 70 years old, weighs 70 kg and is 63 inches tall), what creatinine clearance do you get? Also, what would her ideal body weight and adjusted body weight be for dosing purposes?  \n\nAssuming her eGFR comes in under 45 mL/min/1.73 m2, I’d plan to drop both her warfarin and oxycodone doses by about 25%. To justify that, I also need her stroke risk scored using CHA₂DS₂-VASc (she’s 70, female, has hypertension and diabetes, but no CHF, prior stroke or vascular disease).  \n\nOn the pain side, she’s on oxycodone 5 mg three times a day—how many milligram morphine equivalents is that per day? And for her IV maintenance fluids, if you use the 4-2-1 rule on a 70 kg patient, what infusion rate does that translate to in mL/hour?  \n\nFinally, I want to know if there are any Phase 4 trials looking at genotype-guided warfarin dosing in afib—maybe something like NCT01830000 or a similar study—and ideally I’d like to see the full protocol for the top hit. Oh, and because she’s big on nutrition, could you tell me how much vitamin C is in a typical orange?  \n\nI really need hard numbers and solid references for all of this—can’t slide into rounds with just gut feelings.\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "1. Sequential BioMCP research chain:  \n   - Start with think to structure analysis.  \n   - Use search→fetch to retrieve pharmacogenetic variant details.  \n2. Renal function calculators feed into dosing decisions:  \n   - egfr_epi_cr_cys provides precise eGFR;  \n   - crcl_cockcroft_gault uses adjusted weight from ibw_abw_calculator;  \n   - Decision node: if eGFR<45 then apply 25% dose reduction.  \n3. Weight chain:  \n   - ibw_abw_calculator outputs IBW and ABW;  \n   - ABW is used in Cockcroft-Gault calculation.  \n4. Risk stratification:  \n   - chads2_vasc_score takes patient demographics/conditions;  \n   - Output influences anticoagulation intensity.  \n5. Parallel vs sequential:  \n   - Analgesic MME and maintenance fluids can run in parallel after weight/renal metrics are known.  \n   - Stroke risk and trial evidence searches are independent branches but Reconverge in final recommendations.  \n6. Cross-server dependencies:  \n   - BioMCP search/fetch results (CYP2C9*3 variant) directly inform warfarin dose adjustment.  \n   - Medical Calculator outputs determine pharmacokinetic adjustments.  \n   - FruityVice nutritional data provides dietary counseling for vitamin C intake.  \n7. Iterative decision point:  \n   - eGFR threshold triggers different dosage workflows.  \n   - Trial evidence may refine or override standard dosing guidelines.  \n8. Multi-server integration ensures a comprehensive, personalized plan combining literature evidence, genetic data, renal/calculator metrics, and nutrition analysis.",
+          "distraction_servers": [
+            "Bibliomantic",
+            "Context7",
+            "Game Trends",
+            "Hugging Face",
+            "National Parks",
+            "NixOS",
+            "OKX Exchange",
+            "OSINT Intelligence",
+            "Scientific Computing",
+            "Weather Data"
+          ]
+        }
+      ],
+      "servers": [
+        "Medical Calculator",
+        "FruityVice",
+        "BioMCP"
+      ],
+      "combination_name": "Health Platform",
+      "combination_type": "three_server_combinations"
+    },
+    {
+      "server_name": "Metropolitan Museum+Huge Icons+Wikipedia",
+      "tasks": [
+        {
+          "task_id": "metropolitan_museum_huge_icons_wikipedia_000",
+          "task_description": "Create a React-based digital exhibit overview featuring three artifacts from the Met’s Egyptian Art department. 1) Call list-departments to locate the department whose name contains “Egyptian Art.” 2) Use the resulting departmentId to call search-museum-objects with q=\"Egyptian\", hasImages=true, departmentId=<id>. If fewer than three objects are returned, repeat search-museum-objects with title=true, q=\"Sarcophagus\", hasImages=true, departmentId=<id>. 3) For the top three objectIds, call get-museum-object(objectId, returnImage=true) to retrieve title, objectName, classification, and image URL. 4) For each artifact’s title or classification, call search_wikipedia(query=<classification or title>) and take the first match. 5) Call get_summary(title=<article>) and measure its length: if over 200 characters, call summarize_article_section(title=<article>, section_title=\"Overview\", max_length=150); if under 200, call summarize_article_for_query(title=<article>, query=<classification>, max_length=250). 6) Call extract_key_facts(title=<article>, topic_within_article=<classification>, count=5). 7) In parallel, call list_icons to retrieve all available icon names. For each artifact’s classification, call search_icons(query=<classification>) and select up to two icons; if none found, fallback to search_icons(query=\"museum,artifact\"). Validate each found icon against the list_icons result. 8) Finally, call get_platform_usage(platform=\"react\") to obtain React integration code snippets. 9) Produce a combined JSON report listing each artifact’s id, title, image URL, summary, key facts, chosen icons, and React usage sample.",
+          "fuzzy_description": "I’m working on a little side project at my company where I’m using React to build a digital showcase for the Met’s Egyptian Art collection. I need to feature three objects that have good images—if you can’t find enough under the broad “Egyptian Art” label, feel free to focus on some famous sarcophagi instead. For each piece, I’d love the official title and classification, a crisp intro (around 150–200 words max), plus about five key tidbits or facts. It’d also be great to pair each artifact with one or two icons that match its classification—if nothing obvious shows up, just grab some generic museum or artifact icons. Finally, could you include a short React code snippet that demonstrates how to feed this data into a component? And please make sure everything is pulled straight from the Met’s own collection metadata or equally solid sources, since I’ll need real records to back up my demo. Thanks!\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "Step 1→2: list-departments supplies departmentId for search-museum-objects. Decision: if search returns <3, branch to a second search-museum-objects call with title=true. Step 2→3: search-museum-objects yields objectIds consumed by get-museum-object. Step 3→4: each artifact’s title/classification feeds search_wikipedia. Step 4→5: get_summary result length drives conditional calls to summarize_article_section or summarize_article_for_query. Step 5→6: summaries and classification feed extract_key_facts. Parallel chain: list_icons → search_icons for each classification → validation against list_icons, with fallback query if empty. Final consolidation: get_platform_usage(react) combines with artifacts and icons data. Cross-server dependencies: Met data (classification) drives Wikipedia and Huge Icons queries; icon search results are cross-validated against list_icons; React usage ties icon data back into the UI context.",
+          "distraction_servers": [
+            "BioMCP",
+            "DEX Paprika",
+            "FruityVice",
+            "Google Maps",
+            "Math MCP",
+            "Medical Calculator",
+            "NixOS",
+            "OSINT Intelligence",
+            "Reddit",
+            "Unit Converter"
+          ]
+        }
+      ],
+      "servers": [
+        "Metropolitan Museum",
+        "Huge Icons",
+        "Wikipedia"
+      ],
+      "combination_name": "Creative Resources",
+      "combination_type": "three_server_combinations"
+    }
+  ]
+}
