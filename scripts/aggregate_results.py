@@ -46,14 +46,18 @@ def analyze_results_directory(directory_path, prefix_filter=None):
     # Compute averages across all files
     metrics = {}
     
-    # Fields we need for schema_understanding_score
-    schema_fields = ['input_schema_compliance', 'valid_tool_name_rate', 'tool_call_success_rate']
+    # Define domain structure with their component fields
+    domain_structure = {
+        'schema_understanding': ['valid_tool_name_rate', 'input_schema_compliance', 'tool_call_success_rate'],
+        'task_completion': ['task_fulfillment', 'grounding'],
+        'tool_usage': ['tool_appropriateness', 'parameter_accuracy'],
+        'planning_effectiveness': ['dependency_awareness', 'parallelism_and_efficiency']
+    }
     
-    # All score fields that need normalization
-    score_fields = ['task_completion_score', 'tool_selection_score', 'planning_effectiveness_and_efficiency_score']
-    
-    # Collect all metrics
-    all_fields = schema_fields + score_fields
+    # Collect all metric fields
+    all_fields = []
+    for domain_fields in domain_structure.values():
+        all_fields.extend(domain_fields)
     
     for field in all_fields:
         values = []
@@ -67,37 +71,44 @@ def analyze_results_directory(directory_path, prefix_filter=None):
             print(f"Warning: {field} not found in any results")
             metrics[field] = 0.0
     
-    # Compute schema_understanding_score
-    schema_understanding_score = (
-        metrics['input_schema_compliance'] + 
-        metrics['valid_tool_name_rate'] + 
-        metrics['tool_call_success_rate']
-    ) / 3
+    # Compute domain scores organized by domain structure
+    domain_scores = {}
     
-    # Normalize score fields by dividing by 10
-    normalized_scores = {}
-    for field in score_fields:
-        normalized_scores[f"{field}"] = metrics[field] / 10
+    for domain, fields in domain_structure.items():
+        domain_data = {}
+        
+        # Add individual field scores
+        for field in fields:
+            if field in metrics:
+                # Schema understanding fields are already rates (0-1), others need normalization
+                if domain == 'schema_understanding':
+                    domain_data[field] = metrics[field]
+                else:
+                    domain_data[field] = metrics[field] / 10  # Normalize by dividing by 10
+            else:
+                domain_data[field] = 0.0
+        
+        # Compute domain overall score as average of its fields
+        field_values = [domain_data[field] for field in fields if field in domain_data]
+        if field_values:
+            domain_data['overall_score'] = sum(field_values) / len(field_values)
+        else:
+            domain_data['overall_score'] = 0.0
+            
+        domain_scores[domain] = domain_data
     
-    # Add schema_understanding_score (already normalized as it's based on rates)
-    normalized_scores['schema_understanding_score'] = schema_understanding_score
+    # Compute overall score as average of all domain overall scores
+    domain_overall_scores = [domain_scores[domain]['overall_score'] for domain in domain_scores]
+    overall_score = sum(domain_overall_scores) / len(domain_overall_scores) if domain_overall_scores else 0.0
     
-    # Compute overall_score by averaging all 4 normalized score fields
-    overall_score = (
-        normalized_scores['task_completion_score'] + 
-        normalized_scores['tool_selection_score'] + 
-        normalized_scores['planning_effectiveness_and_efficiency_score'] + 
-        normalized_scores['schema_understanding_score']
-    ) / 4
-    
-    normalized_scores['overall_score'] = overall_score
+    domain_scores['overall_score'] = overall_score
     
     return {
         'directory': directory_path,
         'prefix_filter': prefix_filter,
         'num_files_processed': len(all_results),
         'raw_metrics': metrics,
-        'normalized_scores': normalized_scores
+        'domain_scores': domain_scores
     }
 
 
@@ -122,41 +133,88 @@ def main():
                     results_by_type[server_type] = result
                     print(f"\nResults for {result['directory']} ({server_type}):")
                     print(f"Files processed: {result['num_files_processed']}")
-                    print("Normalized Scores:")
-                    for key, value in result['normalized_scores'].items():
-                        print(f"  {key}: {value:.4f}")
+                    print("Domain Scores:")
+                    
+                    # Print domain hierarchy
+                    for domain, domain_data in result['domain_scores'].items():
+                        if domain == 'overall_score':
+                            continue
+                        print(f"  {domain}:")
+                        for field, value in domain_data.items():
+                            if field == 'overall_score':
+                                print(f"    - overall_score: {value:.4f}")
+                            else:
+                                print(f"    - {field}: {value:.4f}")
+                    
+                    print(f"  overall_score: {result['domain_scores']['overall_score']:.4f}")
                     print("-" * 60)
             
             # Compute multi-server aggregate scores
             multi_server_scores = None
             if 'double_server' in results_by_type and 'triple_server' in results_by_type:
-                double_scores = results_by_type['double_server']['normalized_scores']
-                triple_scores = results_by_type['triple_server']['normalized_scores']
+                double_domain_scores = results_by_type['double_server']['domain_scores']
+                triple_domain_scores = results_by_type['triple_server']['domain_scores']
                 
                 multi_server_scores = {}
-                for key in double_scores:
-                    multi_server_scores[key] = (30/48 * double_scores[key] + 18/48 * triple_scores[key])
+                
+                # Aggregate domain scores
+                for domain in double_domain_scores:
+                    if domain == 'overall_score':
+                        multi_server_scores[domain] = (30/48 * double_domain_scores[domain] + 18/48 * triple_domain_scores[domain])
+                    else:
+                        multi_server_scores[domain] = {}
+                        for field in double_domain_scores[domain]:
+                            multi_server_scores[domain][field] = (30/48 * double_domain_scores[domain][field] + 18/48 * triple_domain_scores[domain][field])
                 
                 print(f"\nMulti-server aggregate scores for {directory}:")
                 print("(30/48 * double_server + 18/48 * triple_server)")
-                print("Normalized Scores:")
-                for key, value in multi_server_scores.items():
-                    print(f"  {key}: {value:.4f}")
+                print("Domain Scores:")
+                
+                # Print domain hierarchy
+                for domain, domain_data in multi_server_scores.items():
+                    if domain == 'overall_score':
+                        continue
+                    print(f"  {domain}:")
+                    for field, value in domain_data.items():
+                        if field == 'overall_score':
+                            print(f"    - overall_score: {value:.4f}")
+                        else:
+                            print(f"    - {field}: {value:.4f}")
+                
+                print(f"  overall_score: {multi_server_scores['overall_score']:.4f}")
                 print("-" * 60)
             
             # Compute overall weighted average
             if 'single_server' in results_by_type and multi_server_scores is not None:
-                single_scores = results_by_type['single_server']['normalized_scores']
+                single_domain_scores = results_by_type['single_server']['domain_scores']
                 
                 overall_weighted_scores = {}
-                for key in single_scores:
-                    overall_weighted_scores[key] = (56/104 * single_scores[key] + 48/104 * multi_server_scores[key])
+                
+                # Aggregate domain scores
+                for domain in single_domain_scores:
+                    if domain == 'overall_score':
+                        overall_weighted_scores[domain] = (56/104 * single_domain_scores[domain] + 48/104 * multi_server_scores[domain])
+                    else:
+                        overall_weighted_scores[domain] = {}
+                        for field in single_domain_scores[domain]:
+                            overall_weighted_scores[domain][field] = (56/104 * single_domain_scores[domain][field] + 48/104 * multi_server_scores[domain][field])
                 
                 print(f"\nOverall weighted average for {directory}:")
                 print("(56/104 * single_server + 48/104 * multi_server)")
-                print("Normalized Scores:")
-                for key, value in overall_weighted_scores.items():
-                    print(f"  {key}: {value:.4f}")
+                print("Domain Scores:")
+                
+                # Print domain hierarchy
+                for domain, domain_data in overall_weighted_scores.items():
+                    if domain == 'overall_score':
+                        continue
+                    print(f"  {domain}:")
+                    for field, value in domain_data.items():
+                        if field == 'overall_score':
+                            print(f"    - overall_score: {value:.4f}")
+                        else:
+                            print(f"    - {field}: {value:.4f}")
+                
+                print(f"  overall_score: {overall_weighted_scores['overall_score']:.4f}")
                 print("-" * 60)
         else:
             print(f"Directory not found: {directory}")
@@ -181,41 +239,88 @@ def main():
                         results_by_type[server_type] = result
                         print(f"\nResults for {result['directory']} ({server_type}):")
                         print(f"Files processed: {result['num_files_processed']}")
-                        print("Normalized Scores:")
-                        for key, value in result['normalized_scores'].items():
-                            print(f"  {key}: {value:.4f}")
+                        print("Domain Scores:")
+                        
+                        # Print domain hierarchy
+                        for domain, domain_data in result['domain_scores'].items():
+                            if domain == 'overall_score':
+                                continue
+                            print(f"  {domain}:")
+                            for field, value in domain_data.items():
+                                if field == 'overall_score':
+                                    print(f"    - overall_score: {value:.4f}")
+                                else:
+                                    print(f"    - {field}: {value:.4f}")
+                        
+                        print(f"  overall_score: {result['domain_scores']['overall_score']:.4f}")
                         print("-" * 40)
                 
                 # Compute multi-server aggregate scores
                 multi_server_scores = None
                 if 'double_server' in results_by_type and 'triple_server' in results_by_type:
-                    double_scores = results_by_type['double_server']['normalized_scores']
-                    triple_scores = results_by_type['triple_server']['normalized_scores']
+                    double_domain_scores = results_by_type['double_server']['domain_scores']
+                    triple_domain_scores = results_by_type['triple_server']['domain_scores']
                     
                     multi_server_scores = {}
-                    for key in double_scores:
-                        multi_server_scores[key] = (30/48 * double_scores[key] + 18/48 * triple_scores[key])
+                    
+                    # Aggregate domain scores
+                    for domain in double_domain_scores:
+                        if domain == 'overall_score':
+                            multi_server_scores[domain] = (30/48 * double_domain_scores[domain] + 18/48 * triple_domain_scores[domain])
+                        else:
+                            multi_server_scores[domain] = {}
+                            for field in double_domain_scores[domain]:
+                                multi_server_scores[domain][field] = (30/48 * double_domain_scores[domain][field] + 18/48 * triple_domain_scores[domain][field])
                     
                     print(f"\nMulti-server aggregate scores for {directory}:")
                     print("(30/48 * double_server + 18/48 * triple_server)")
-                    print("Normalized Scores:")
-                    for key, value in multi_server_scores.items():
-                        print(f"  {key}: {value:.4f}")
+                    print("Domain Scores:")
+                    
+                    # Print domain hierarchy
+                    for domain, domain_data in multi_server_scores.items():
+                        if domain == 'overall_score':
+                            continue
+                        print(f"  {domain}:")
+                        for field, value in domain_data.items():
+                            if field == 'overall_score':
+                                print(f"    - overall_score: {value:.4f}")
+                            else:
+                                print(f"    - {field}: {value:.4f}")
+                    
+                    print(f"  overall_score: {multi_server_scores['overall_score']:.4f}")
                     print("-" * 40)
                 
                 # Compute overall weighted average
                 if 'single_server' in results_by_type and multi_server_scores is not None:
-                    single_scores = results_by_type['single_server']['normalized_scores']
+                    single_domain_scores = results_by_type['single_server']['domain_scores']
                     
                     overall_weighted_scores = {}
-                    for key in single_scores:
-                        overall_weighted_scores[key] = (56/104 * single_scores[key] + 48/104 * multi_server_scores[key])
+                    
+                    # Aggregate domain scores
+                    for domain in single_domain_scores:
+                        if domain == 'overall_score':
+                            overall_weighted_scores[domain] = (56/104 * single_domain_scores[domain] + 48/104 * multi_server_scores[domain])
+                        else:
+                            overall_weighted_scores[domain] = {}
+                            for field in single_domain_scores[domain]:
+                                overall_weighted_scores[domain][field] = (56/104 * single_domain_scores[domain][field] + 48/104 * multi_server_scores[domain][field])
                     
                     print(f"\nOverall weighted average for {directory}:")
                     print("(56/104 * single_server + 48/104 * multi_server)")
-                    print("Normalized Scores:")
-                    for key, value in overall_weighted_scores.items():
-                        print(f"  {key}: {value:.4f}")
+                    print("Domain Scores:")
+                    
+                    # Print domain hierarchy
+                    for domain, domain_data in overall_weighted_scores.items():
+                        if domain == 'overall_score':
+                            continue
+                        print(f"  {domain}:")
+                        for field, value in domain_data.items():
+                            if field == 'overall_score':
+                                print(f"    - overall_score: {value:.4f}")
+                            else:
+                                print(f"    - {field}: {value:.4f}")
+                    
+                    print(f"  overall_score: {overall_weighted_scores['overall_score']:.4f}")
                     print("-" * 60)
 
 
