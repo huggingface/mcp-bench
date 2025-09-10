@@ -153,9 +153,16 @@ echo "Trajectories results will be saved to $OUTPUT_DIR"
 # Store benchmark PIDs
 BENCHMARK_PIDS=()
 
+# Count task files dynamically
+SINGLE_SERVER_COUNT=$(ls tasks/single_server_*.json 2>/dev/null | wc -l)
+DOUBLE_SERVER_COUNT=$(ls tasks/double_server_*.json 2>/dev/null | wc -l)
+TRIPLE_SERVER_COUNT=$(ls tasks/triple_server_*.json 2>/dev/null | wc -l)
+
+echo "Found $SINGLE_SERVER_COUNT single-server tasks, $DOUBLE_SERVER_COUNT double-server tasks, $TRIPLE_SERVER_COUNT triple-server tasks"
+
 # Run single-server tasks
-for i in 0 1 2 3; do
-    echo "Running task set $i..."
+for ((i=0; i<SINGLE_SERVER_COUNT; i++)); do
+    echo "Running single-server task set $i..."
     python run_benchmark.py --models huggingface \
         --judge-provider o4-mini \
         --tasks-file tasks/single_server_${i}.json \
@@ -167,8 +174,8 @@ for i in 0 1 2 3; do
 done
 
 # Run double-server tasks
-for i in 0 1; do
-    echo "Running task set double $i..."
+for ((i=0; i<DOUBLE_SERVER_COUNT; i++)); do
+    echo "Running double-server task set $i..."
     python run_benchmark.py --models huggingface \
         --judge-provider o4-mini \
         --tasks-file tasks/double_server_${i}.json \
@@ -180,8 +187,8 @@ for i in 0 1; do
 done
 
 # Run triple-server tasks
-echo "Running task set triple..."
-for i in 0 1; do
+for ((i=0; i<TRIPLE_SERVER_COUNT; i++)); do
+    echo "Running triple-server task set $i..."
     python run_benchmark.py --models huggingface \
         --judge-provider o4-mini \
         --tasks-file tasks/triple_server_${i}.json \
