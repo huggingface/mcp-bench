@@ -4,6 +4,151 @@
   },
   "server_tasks": [
     {
+      "server_name": "DEX Paprika+OKX Exchange",
+      "tasks": [
+        {
+          "task_id": "dex_paprika_okx_exchange_000",
+          "task_description": "Conduct a multi-network arbitrage analysis for the token 'UNI' by executing the following steps:\n\n1. Call DEX Paprika:getNetworks to confirm supported networks.\n2. Search for the token 'UNI' across all networks using DEX Paprika:search with {\"query\": \"UNI\"}. Extract the tokenAddress for each network from the search results.\n3. Filter down to exactly the 'ethereum', 'polygon', and 'binance-smart-chain' networks and their corresponding UNI tokenAddress values.\n4. For each of these three networks:\n   a. Call DEX Paprika:getTokenDetails with the network and tokenAddress to confirm token metadata.\n   b. Call DEX Paprika:getTokenPools with network, tokenAddress, page=0, limit=5, sort='desc', orderBy='volume_usd' to retrieve the top 5 liquidity pools trading UNI.\n   c. For each of the top 5 pools returned:\n      i. Call DEX Paprika:getPoolDetails with network and poolAddress to fetch current pool price_usd.\n     ii. Call DEX Paprika:getPoolOHLCV with network, poolAddress, start='past 7 days', interval='24h', limit=7 to retrieve daily OHLCV for the past week.\n    iii. In parallel, call OKX Exchange:get_price with {\"instrument\": \"UNI-USDT\"} to get the latest spot price, and OKX Exchange:get_candlesticks with {\"instrument\": \"UNI-USDT\", \"bar\": \"1D\", \"limit\": 7} to retrieve the last 7 daily candlesticks.\n     iv. Compute the average pool close price from the 7 OHLCV points and the average OKX close price from candlesticks. Calculate the average percentage price difference between each pool and OKX.\n      v. If the average percentage price difference exceeds 2%, call DEX Paprika:getPoolTransactions with network, poolAddress, page=0, limit=20 to gather the 20 most recent transactions for liquidity depth analysis.\n5. Aggregate all findings into a JSON table with fields: network, poolAddress, DEX identifier, average pool price (USD), average OKX price (USD), average percentage difference, and average swap size in USD (if transaction analysis was triggered).\n6. Highlight all pools where the average percentage difference is above 2%.",
+          "fuzzy_description": "Hey, I’m looking into whether there’s any easy arbitrage for UNI right now on its main chains—Ethereum, Polygon, and BSC—over the past week. I know some pools on those networks can trade a bit above or below what UNI goes for on OKX’s UNI-USDT pair, but I’m not sure how big those gaps really are. Could you pull the biggest UNI pools by volume on each chain, figure out their average daily closing price for the last seven days, and then compare that to OKX’s average daily close? If any of those pools are drifting more than about 2% from OKX, I’d also like to see what kind of trade sizes or liquidity they’ve actually seen recently so I can tell if there’s enough depth to make a move. I need real numbers—average pool price, average OKX price, percent differences, and any swap-size or volume details for the outliers—because I’m trying to build a quick, data-driven arbitrage playbook. Thanks!\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "Inherent dependencies: DEX Paprika:getNetworks must run first to list network IDs, which are then used by DEX Paprika:search to find UNI tokenAddress across networks. The tokenAddress outputs feed into getTokenDetails and getTokenPools. getTokenPools returns poolAddress values that sequentially feed getPoolDetails, getPoolOHLCV, and—conditionally based on price gap—getPoolTransactions. Parallel cross-validation: for each pool, OKX Exchange:get_price and get_candlesticks run in parallel using the 'UNI-USDT' instrument. Data flow: network→tokenAddress→pool list→pool details & OHLCV→computed price difference→conditional transaction analysis. Key decision points: filtering to three specific networks; selecting top 5 pools by volume_usd; gating getPoolTransactions calls if average pool vs OKX price difference >2%. Cross-server dependency: pool prices and historical OHLCV from DEX Paprika are compared against live and historical OKX data to identify arbitrage gaps.",
+          "distraction_servers": [
+            "Bibliomantic",
+            "BioMCP",
+            "Car Price Evaluator",
+            "Game Trends",
+            "Math MCP",
+            "NixOS",
+            "Paper Search",
+            "Scientific Computing",
+            "Unit Converter",
+            "Wikipedia"
+          ]
+        }
+      ],
+      "servers": [
+        "DEX Paprika",
+        "OKX Exchange"
+      ],
+      "combination_name": "Crypto Trading",
+      "combination_type": "two_server_combinations"
+    },
+    {
+      "server_name": "DEX Paprika+OKX Exchange",
+      "tasks": [
+        {
+          "task_id": "dex_paprika_okx_exchange_001",
+          "task_description": "You are tasked with performing a deep liquidity and price correlation analysis for the leading Ethereum-based DEX pool and cross-validating its price dynamics against OKX market data.  Follow these steps exactly:\n\n1. Retrieve high-level DEX ecosystem statistics.\n2. List all supported networks and confirm Ethereum is available.\n3. On Ethereum, fetch all DEXes and identify the one with the highest total pool count.\n4. For that DEX, retrieve its pools sorted by USD volume (descending) and select the top pool.\n5. Get detailed information for that top pool, including the two constituent token addresses.\n6. For each token in the pool, fetch full token details (symbol, decimals).\n7. Pull the pool’s OHLCV history for the past 30 days with 24h intervals.\n8. On OKX Exchange, determine the appropriate instrument symbol by combining the two token symbols (e.g., TOKENA-TOKENB).\n9. Fetch 1-day interval candlesticks for that instrument over the past 30 days.\n10. Compute the Pearson correlation coefficient between the pool’s closing price (from OHLCV) and OKX’s closing price series.\n11. Identify any days where the price divergence (absolute difference) exceeded 2% of the OKX closing price.\n12. Retrieve the latest 10 transactions for the pool and summarize the volume and transaction types per day.\n\nProduce a JSON report containing:\n- ecosystemStats: result of step 1\n- chosenNetwork: network ID used\n- chosenDex: DEX ID and name with highest pool count\n- topPool: address, volume_usd, token0, token1\n- tokenDetails: array of both token detail objects\n- poolOhlcv: full 30-day OHLCV array\n- okxCandles: full 30-day candlestick array\n- priceCorrelation: correlation coefficient\n- divergenceDays: array of dates with >2% divergence and percent difference\n- recentTransactions: array of the 10 transaction objects grouped by date with totals",
+          "fuzzy_description": "Hey, I’ve been digging into DeFi for a project and I’m trying to figure out if a major liquidity pool on Ethereum really moves in step with the same pair on OKX. I’d love to get a feel for the overall DEX scene (make sure Ethereum’s in there), see which Ethereum exchange has the most pools, and then home in on that single biggest pool by dollar volume. Once we’ve got that, I want the token pair info, plus a daily on-chain price series for the past month, alongside OKX’s daily candles for the same pair. From there I’m hoping to crunch a correlation coefficient and call out any days where the on-chain price was off by more than 2%. And as a final touch, a quick rundown of the last ten swaps in that pool—volumes and types grouped by day—would really seal the deal. I need real numbers and dates so I can show my team something solid, not just gut feelings. Does that make sense?\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "This task requires a strict sequential and cross-server workflow:\n\n• Step 1 → getStats: Establish baseline ecosystem metrics.\n• Step 2 → getNetworks: Must always run first to obtain valid network IDs; we verify “ethereum” exists.\n• Step 3 → getNetworkDexes: Consumes network=“ethereum”; paginates through pages to find which DEX has the highest pool count field (in output meta).\n• Step 4 → getDexPools: Feeds “ethereum” and chosen dex ID; sorted by volume_usd desc; select index 0.\n• Step 5 → getPoolDetails: Uses network and poolAddress from the top pool to fetch constituent token addresses.\n• Step 6 → getTokenDetails: Two parallel calls (one per tokenAddress) on the same network; results yield symbol and decimals for OKX instrument construction.\n• Step 7 → getPoolOHLCV: Uses network and poolAddress; start=\"past 30 days\", interval=\"24h\"; returns daily price series.\n• Steps 8–9 → OKX get_candlesticks: Cross-server dependency: derive instrument from Paprika token symbols (token0-symbol + “-” + token1-symbol); fetch 1D bars for past 30 days.\n• Step 10–11: Post-processing: correlate time-aligned close prices; compute Pearson coefficient; detect absolute divergence >2% per day.\n• Step 12 → getPoolTransactions: Final sequential call using network and poolAddress; limit=10; summarizes volumes and types by date.\n\nCritical decision points:\n- Choosing the DEX with the largest pool count from getNetworkDexes output.\n- Selecting the top pool by descending volume from getDexPools.\n- Instrument string formation for OKX based directly on Paprika token symbols.\n\nParallel vs sequential:\n- Token detail fetches can run in parallel once poolDetails returns.\n- All other steps form a strict chain.\n\nCross-server dependency:\n- Paprika token metadata drives OKX instrument queries.\n- Paprika OHLCV and OKX candlesticks are cross-validated via correlation and divergence analysis.",
+          "distraction_servers": [
+            "BioMCP",
+            "Car Price Evaluator",
+            "Math MCP",
+            "Medical Calculator",
+            "Metropolitan Museum",
+            "NASA Data",
+            "NixOS",
+            "Reddit",
+            "Unit Converter",
+            "Weather Data"
+          ]
+        }
+      ],
+      "servers": [
+        "DEX Paprika",
+        "OKX Exchange"
+      ],
+      "combination_name": "Crypto Trading",
+      "combination_type": "two_server_combinations"
+    },
+    {
+      "server_name": "Metropolitan Museum+Wikipedia",
+      "tasks": [
+        {
+          "task_id": "metropolitan_museum_wikipedia_000",
+          "task_description": "Investigate all Claude Monet paintings tagged “Impressionism” in the European Paintings department at the Metropolitan Museum. First, list departments and identify the departmentId for “European Paintings.” Then search for objects with q=\"Impressionism\", departmentId=<found id>, hasImages=true. Retrieve each object’s metadata and image, filter to those where artistDisplayName is “Claude Monet.” For each Monet painting, search Wikipedia for the painting title (fallback to \"painting title + Claude Monet\" if no direct match). For the matched article, get a general summary, a summary focused on “Impressionism,” and a summary of the “Composition” section. Extract the top 3 key facts about composition techniques. Cross-validate the objectDate and medium from the museum metadata against information in the Wikipedia summaries. Produce a report listing for each painting: title, objectDate, medium, image availability, matched Wikipedia article title, general summary, Impressionism-focused summary, composition section summary, 3 key composition facts, and a validation flag indicating whether date and medium match between sources.",
+          "fuzzy_description": "I’ve been putting together a little talk on Monet’s Impressionist works and I’m really curious about what the Met has in its European Paintings section. I’m not even sure how many of his pieces there are tagged as “Impressionism” and have images you can actually look at, so could you dig into that catalog for me? Then, for each Monet painting you find, I’d love if you could hunt down the matching Wikipedia entry (and if the title alone doesn’t link, try “painting title + Claude Monet”), grab a quick overview of the work, anything the article says specifically about its Impressionist style, and whatever it says under “Composition.” From that last bit, could you pull out the top three compositional techniques Monet used? Oh, and one more thing—please double-check that the date and medium the Met lists match what’s on Wikipedia. I need solid, sourced details for my presentation—no guessing, just real metadata and Wikipedia citations, okay?\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "1. list-departments → identify departmentId for “European Paintings.” 2. search-museum-objects(q=\"Impressionism\", departmentId, hasImages=true) → objectIds. 3. For each objectId: get-museum-object → metadata (artistDisplayName, title, objectDate, medium, image). Decision point: filter metadata for artistDisplayName==\"Claude Monet\"; non-Monet paintings are dropped. 4. For each Monet painting: Wikipedia:search_wikipedia(query=objectTitle, limit=5) → candidate article titles. Decision: if no exact title match, fallback to search with \"objectTitle + Claude Monet.\" 5. For selected article: Wikipedia:get_summary(title) for overall context. 6. Wikipedia:summarize_article_for_query(title, query=\"Impressionism\") → focused summary. 7. Wikipedia:get_sections(title) → list sections; decision: locate \"Composition\" or similar section. 8. Wikipedia:summarize_article_section(title, section_title=\"Composition\") → composition summary. 9. Wikipedia:extract_key_facts(title, topic_within_article=\"Composition techniques\", count=3) → key composition facts. 10. Cross-server validation: compare museum metadata (objectDate, medium) with facts in Wikipedia summaries; flag matches or discrepancies. Sequential chain: departments → search objects → fetch objects → per-object Wikipedia fetches → per-article summaries and fact extraction → final report. Cross-server dependency: museum metadata drives Wikipedia query parameters and cross-validates factual consistency. Parallelism: steps 4–9 can run independently for each Monet painting after initial filtering.",
+          "distraction_servers": [
+            "Bibliomantic",
+            "BioMCP",
+            "Context7",
+            "DEX Paprika",
+            "FruityVice",
+            "Game Trends",
+            "Huge Icons",
+            "Hugging Face",
+            "NASA Data",
+            "OKX Exchange"
+          ]
+        }
+      ],
+      "servers": [
+        "Metropolitan Museum",
+        "Wikipedia"
+      ],
+      "combination_name": "Cultural Knowledge",
+      "combination_type": "two_server_combinations"
+    },
+    {
+      "server_name": "Metropolitan Museum+Wikipedia",
+      "tasks": [
+        {
+          "task_id": "metropolitan_museum_wikipedia_001",
+          "task_description": "Evaluate the representation and historical context of New Kingdom Egyptian chairs in the Metropolitan Museum of Art and compare their materials and design features against scholarly descriptions from Wikipedia.\n\nSteps:\n1. List all Met Museum departments to find the ID for “Egyptian, Classical, Ancient Near Eastern Art.”\n2. Search that department for objects with query “chair” and images.\n3. Retrieve details for the first three matching chairs and extract their “Period” and “Materials.”\n4. Filter those chairs by “New Kingdom” in their period. If fewer than two qualify, repeat search in the same department for “stool” and “footrest” with images, and gather until two New Kingdom items are found.\n5. From the two New Kingdom chairs, select the one with the richest materials list as the representative artifact.\n6. Search Wikipedia for “Ancient Egyptian furniture” (limit 5) and select the article titled “Ancient Egyptian furniture.”\n7. Get the summary of that article.\n8. Extract the top five key facts focused on “New Kingdom” furniture.\n9. Retrieve the sections of the article and summarize the “Construction and materials” section (max_length 150).\n10. Get up to five related topics for further scholarly context.\n11. Compare the materials list of the Met chair against the Wikipedia key facts materials. Flag any materials present in the artifact but not mentioned in the Wikipedia facts as potential anomalies.\n\nProduce a structured report including:\n- Department name and ID\n- List of candidate chairs (ID, title, period, materials)\n- Selected representative chair (with image URL) and its metadata\n- Wikipedia summary\n- Extracted key facts on New Kingdom furniture\n- Summarized “Construction and materials” section\n- Related topics\n- Comparison table of materials with anomalies flagged",
+          "fuzzy_description": "I’m putting together a small art-history spotlight on seating in New Kingdom Egypt—specifically what’s on view at the Met—and I’m a bit stuck on how to pull everything together. My professor wants me to pick out an example piece from the Met’s Egyptian section, but I’m not even sure what they call that department or how to find chairs with pictures in their collection. Once I have a few candidates, I need to know their dates (make sure they’re really New Kingdom) and exactly what they’re made of. If there aren’t enough chairs, I might have to slip in a stool or footrest to hit at least two examples, and then choose the one with the most elaborate materials list as my main focus.\n\nAfter that, I have to see what Wikipedia says about Ancient Egyptian furniture—grab the article summary, pull out the top five insights specifically about New Kingdom pieces, and boil down the “Construction and materials” bit into a quick blurb. It’d also help to know a handful of related topics I could mention for extra context. Finally, I need to check if my chosen Met object uses any materials that don’t show up in those Wikipedia facts—those could be neat anomalies to point out.\n\nI really need actual Met IDs, image links, periods, materials lists, the Wikipedia summary, key New Kingdom facts, that short construction/materials paragraph, related topics, and a note on any unmatched materials. Can you help me track it all down? I can’t go to my professor with guesses—gotta have real data or solid sources.\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "Key tool chains and data flow:\n• Sequential chain: list-departments → obtain departmentId → search-museum-objects with departmentId → get-museum-object for metadata extraction → conditional filtering → optional repeated search-museum-objects → selection of representative object → get-museum-object (with returnImage) → Wikipedia:search_wikipedia → Wikipedia:get_summary → Wikipedia:extract_key_facts → Wikipedia:get_sections → Wikipedia:summarize_article_section → Wikipedia:get_related_topics.\n\nCritical decision points:\n• After initial chair search, filter by period “New Kingdom.” If fewer than two items, trigger a fallback search for “stool” and “footrest.”\n• Selection of the representative artifact based on the length of materials list.\n• Matching of materials against Wikipedia key facts to flag anomalies.\n\nParallel vs sequential requirements:\n• Parallel: Retrieving details for the first three chairs can happen in parallel to speed metadata extraction.\n• Sequential: Wikipedia calls must follow after selecting representative chair.\n\nCross-server dependencies:\n• Met Museum departmentId output feeds into Met Museum search.\n• Met Museum object metadata (period, materials) influences Wikipedia queries (focus on New Kingdom furniture).\n• Wikipedia key facts and section summaries are cross-validated against Met object materials to identify anomalies.\n\nThis workflow demands tight dependencies across tools and conditional branching that cannot be completed without understanding each tool’s inputs and outputs.",
+          "distraction_servers": [
+            "Bibliomantic",
+            "Call for Papers",
+            "DEX Paprika",
+            "Game Trends",
+            "Hugging Face",
+            "Medical Calculator",
+            "Movie Recommender",
+            "OSINT Intelligence",
+            "Reddit",
+            "Unit Converter"
+          ]
+        }
+      ],
+      "servers": [
+        "Metropolitan Museum",
+        "Wikipedia"
+      ],
+      "combination_name": "Cultural Knowledge",
+      "combination_type": "two_server_combinations"
+    },
+    {
+      "server_name": "Scientific Computing+Math MCP",
+      "tasks": [
+        {
+          "task_id": "scientific_computing_math_mcp_000",
+          "task_description": "You are given a 3×3 covariance matrix for three financial assets and a 3×1 expected returns vector. Perform the following steps:\n1. Create the covariance matrix named “cov_matrix” with values [0.04, 0.006, 0.014, 0.006, 0.09, 0.02, 0.014, 0.02, 0.16].\n2. Create the expected returns vector named “exp_returns” with values [0.08, 0.12, 0.10].\n3. View “cov_matrix” to verify its contents.\n4. Compute the determinant of “cov_matrix”.\n   • If the determinant is zero, scale “cov_matrix” in place by a factor of 1.001 and recompute the determinant until it is non-zero.\n5. Compute eigenvalues and right eigenvectors of the (possibly scaled) “cov_matrix”.\n6. Identify the largest and smallest eigenvalues, then compute the condition number = (largest)/(smallest) using Math MCP division.\n   • If the condition number > 100, compute the SVD of “cov_matrix”, then assemble its pseudoinverse by computing 1/singular values (Math MCP division), forming a diagonal matrix, and multiplying V^T, diagonal, and U^T via multiply_matrices and transpose.\n   • Otherwise, compute the regular matrix inverse of “cov_matrix”.\n7. Multiply the inverse or pseudoinverse by “exp_returns” to compute the portfolio weight vector “weights”.\n8. Project “exp_returns” onto the principal eigenvector (the eigenvector corresponding to the largest eigenvalue) using vector_project, naming the result “proj_return”.\n9. Cross-validate that the weights sum to 1 by taking the dot product of “weights” with a ones vector [1,1,1] using vector_dot_product.\n\nProvide:\n- The nonzero determinant after any scaling.\n- The condition number.\n- Whether you used inverse or pseudoinverse.\n- The final inverse or pseudoinverse matrix.\n- The weight vector “weights”.\n- The projected return “proj_return”.\n- The dot-product sum of weights.",
+          "fuzzy_description": "I’m working on a mini portfolio analysis for a class project and could use some help untangling the math. I’ve got three assets with expected returns of 0.08, 0.12 and 0.10, and I estimated their covariance matrix as:\n\n[0.04 0.006 0.014  \n 0.006 0.09 0.02  \n 0.014 0.02 0.16]\n\nWhen I peeked at the determinant, I worried it might be zero or really small, so I thought I might gently bump the whole matrix by 0.1% until it’s safely nonzero. After that, I’d like to get its eigenvalues and eigenvectors, figure out the largest and smallest eigenvalue, and compute the condition number. If it turns out to be over 100, I’ll need to go the SVD route and build a pseudoinverse; otherwise a regular inverse should do. Once I’ve got whichever inverse is appropriate, I want to multiply it by the return vector [0.08, 0.12, 0.10] to see what portfolio weights pop out. I’m also curious to project the return vector onto the principal eigenvector (the one tied to the biggest eigenvalue) and then verify my weights sum to 1 by dotting them with [1,1,1].\n\nCould you walk me through all of that and give me the actual numbers? Specifically:  \n• The nonzero determinant after any tiny scaling  \n• The condition number  \n• Whether you ended up using an inverse or a pseudoinverse  \n• The full inverse (or pseudoinverse) matrix  \n• The final weight vector  \n• The projected return onto that top eigenvector  \n• And the dot‐product sum of the weights  \n\nI really need concrete figures—no hand-waving—because I have to show this to my professor and can’t just say “it works out.” Thanks!",
+          "dependency_analysis": "Inherent dependencies: create_tensor produces both the 3×3 covariance matrix and the 3×1 returns vector, which view_tensor reads. The determinant tool consumes the covariance tensor. The determinant output controls whether scale_matrix is called (if det=0). After scaling, determinant is recomputed on the updated tensor. compute_eigen reads the (possibly scaled) covariance matrix and yields eigenvalues and eigenvectors. Scenario-based branching: the eigenvalue array is processed by selecting max and min values and passed to Math MCP:division to compute the condition number. A decision point tests if condition number>100; if true, svd_decompose is invoked and its output (U, S, V^T) is used with transpose and multiply_matrices and Math MCP:division (for 1/S) to assemble the pseudoinverse. If false, matrix_inverse is invoked. The chosen inverse or pseudoinverse is then multiplied with the returns vector via multiply_matrices. vector_project projects the returns onto the principal eigenvector. Finally, vector_dot_product cross-validates the weight sum. Cross-server dependencies: Sci Computing eigenvalues feed into Math MCP division; the scalar condition number from Math MCP determines which Sci Computing matrix inversion workflow to follow. The entire workflow is sequential with a key decision branch at step 6, but includes iterative loops (re-scaling until det≠0) and cross-validation at the end.",
+          "distraction_servers": [
+            "Bibliomantic",
+            "Context7",
+            "FruityVice",
+            "Hugging Face",
+            "Movie Recommender",
+            "NASA Data",
+            "National Parks",
+            "OpenAPI Explorer",
+            "Reddit",
+            "Wikipedia"
+          ]
+        }
+      ],
+      "servers": [
+        "Scientific Computing",
+        "Math MCP"
+      ],
+      "combination_name": "Science Tools",
+      "combination_type": "two_server_combinations"
+    },
+    {
       "server_name": "Scientific Computing+Math MCP",
       "tasks": [
         {
@@ -146,296 +291,6 @@
         "Weather Data"
       ],
       "combination_name": "Travel Weather",
-      "combination_type": "two_server_combinations"
-    },
-    {
-      "server_name": "Unit Converter+Math MCP",
-      "tasks": [
-        {
-          "task_id": "unit_converter_math_mcp_000",
-          "task_description": "An HVAC engineer needs to calculate the total weekly heating and cooling energy required to maintain an interior set point of 22 °C inside a building with wall area 500 m² and overall heat transfer coefficient U = 0.35 W/(m²·K) for the next 7 days (starting tomorrow). The outside temperature forecast for the next 7 days is: 68 °F, 70 °F, 75 °F, 80 °F, 85 °F, 75 °F, 65 °F. Assuming the HVAC system runs 24 hours each day, perform the following steps in sequence using the available tools:\n\n1. Confirm supported units for temperature conversions and energy conversions.\n2. Convert all 7 forecasted outside temperatures from Fahrenheit to Celsius in a single batch.\n3. For each day, compute the temperature difference ΔT = |22 °C − outside °C| using Math MCP operations (subtract and, if needed, multiply negative results by −1 to get absolute values).\n4. Calculate the instantaneous heat transfer rate Q̇ (in watts) for each day using Q̇ = U × A × ΔT (use Math MCP multiplications: first U×A, then result×ΔT).\n5. Convert each Q̇ from watts to kilowatts.\n6. Compute daily energy consumption in kilowatt‐hours: daily_kWh = Q̇(kW) × 24 h.\n7. Sum the seven daily_kWh values to get total weekly energy consumption (kWh) and then compute the average daily consumption (kWh/day).\n8. Convert the total weekly energy consumption from kilowatt‐hours to megajoules and also to Btu.\n9. Compute the total weekly operating cost at a rate of USD 0.12 per kWh (use Math MCP multiplication).\n10. Provide a table listing for each day: day number (1–7), outside temperature in °C, ΔT in °C, Q̇ in kW, daily consumption in kWh. Then provide a summary of: total weekly consumption (kWh), average daily consumption (kWh/day), total in megajoules, total in Btu, and total cost in USD.\n\nNo external data is needed beyond the provided forecast and building parameters. All calculations must use the specified Unit Converter and Math MCP tools in the order defined above.",
-          "fuzzy_description": "I’m trying to forecast the heating and cooling load for my office next week—my boss wants hard numbers. We keep the inside at 22 °C, the exterior wall area is 500 m² with a U-value of 0.35 W/(m²·K), and the seven-day temperature outlook (starting tomorrow) is 68 °F, 70 °F, 75 °F, 80 °F, 85 °F, 75 °F and 65 °F. I’m not sure how to turn those Fahrenheit readings into Celsius, figure out the daily temperature differences, calculate the heat flow in kW, then get the kWh for a full 24 hours each day, and finally sum it up for the week, find the average per day, convert that total into megajoules and Btu, and even estimate the cost at US $0.12 per kWh. Could you walk me through all that and give me a day-by-day breakdown (outside °C, ΔT, Q̇ in kW, daily kWh) plus a weekly summary of total kWh, average daily kWh, total in MJ, total in Btu, and total cost? I really need solid figures to show my manager—no guesswork, just concrete numbers.",
-          "dependency_analysis": "We need a tightly chained cross‐server workflow:  \n\n1. Unit Converter:list_supported_units is called twice—first with unit_type=\"temperature\" and then with unit_type=\"energy\"—to confirm the correct source/target unit strings before any conversions.  \n\n2. Unit Converter:convert_batch (temperature) takes the list of 7 Fahrenheit values and returns their Celsius equivalents in one call. This parallel conversion output feeds directly into the Math MCP phase.  \n\n3. For each of the 7 converted Celsius values, we compute ΔT_i = 22 − T_i using Math MCP:subtract.  \n   • Decision point: if the subtract result is negative (T_i > 22 °C), we call Math MCP:multiply with secondNumber = −1 to get |ΔT_i|. Otherwise we take the positive result.  \n\n4. Compute the constant U×A (0.35 W/m²K × 500 m²) using Math MCP:multiply.  \n   • Sequential chain: first multiply 0.35 × 500 → UA_value.  \n\n5. For each day i, compute instantaneous heat rate Q̇_i (W) = UA_value × ΔT_i with Math MCP:multiply.  \n\n6. Convert each Q̇_i from watts to kilowatts via Unit Converter:convert_power (from_unit=\"watt\", to_unit=\"kilowatt\").  \n\n7. Compute daily energy consumption daily_kWh_i = Q̇_i(kW) × 24 using Math MCP:multiply.  \n\n8. Use Math MCP:sum on the array [daily_kWh_1 … daily_kWh_7] to get total_weekly_kWh.  \n\n9. Compute average_daily_kWh = total_weekly_kWh ÷ 7 using Math MCP:division.  \n\n10. Convert total_weekly_kWh from kilowatt‐hour to megajoule using Unit Converter:convert_energy (from_unit=\"kilowatt hour\", to_unit=\"megajoule\") and to Btu (from_unit=\"kilowatt hour\", to_unit=\"Btu\").  \n\n11. Compute total_cost_USD = total_weekly_kWh × 0.12 via Math MCP:multiply.  \n\nCross‐server dependencies: Unit Converter outputs (temperatures, power, energy conversions) are repeatedly fed into Math MCP operations. Decision branches (sign of ΔT) trigger conditional Math MCP calls to enforce absolute values. The workflow mixes batch conversions, sequential arithmetic chains, and summations—without which the complete weekly HVAC energy and cost analysis cannot be performed.",
-          "distraction_servers": [
-            "Context7",
-            "DEX Paprika",
-            "Game Trends",
-            "Medical Calculator",
-            "Metropolitan Museum",
-            "NASA Data",
-            "National Parks",
-            "OSINT Intelligence",
-            "Scientific Computing",
-            "Weather Data"
-          ]
-        }
-      ],
-      "servers": [
-        "Unit Converter",
-        "Math MCP"
-      ],
-      "combination_name": "Conversion Tools",
-      "combination_type": "two_server_combinations"
-    },
-    {
-      "server_name": "Unit Converter+Math MCP",
-      "tasks": [
-        {
-          "task_id": "unit_converter_math_mcp_001",
-          "task_description": "You are an engineer designing a hot-water pumping and heating system. The system must heat water from 50°F inlet temperature to 120°F outlet temperature under three design flow scenarios: 150 gallon (US) per minute, 200 gallon (US) per minute, and 250 gallon (US) per minute. Perform the following steps:\n\n1. Use a single batch conversion request to convert:\n   - 50 °F → °C (inlet temperature)\n   - 120 °F → °C (outlet temperature)\n   - 150 gallon (US) → cubic meter\n   - 200 gallon (US) → cubic meter\n   - 250 gallon (US) → cubic meter\n   - 1 gram per cubic centimeter → kilograms per cubic meter (water density)\n\n2. Compute the temperature rise ΔT (°C) as outlet_C − inlet_C.\n\n3. For each flow scenario (i = 150, 200, 250 gpm):\n   a. Convert volumetric flow (m³ per minute) to m³ per second by dividing by 60.\n   b. Compute mass flow rate (kg/s) = volumetric_flow_m³/s × density_kg/m³.\n   c. Use specific heat capacity Cp = 4.186 kJ/(kg·K) to compute heat duty Q̇_i (kW) = mass_flow_kg/s × Cp_kJ/(kg·K) × ΔT_K.\n   d. Convert Q̇_i from kilowatt to horsepower.\n\n4. With the three horsepower results:\n   a. Calculate the arithmetic mean horsepower.\n   b. Calculate the median horsepower.\n   c. Determine the maximum horsepower.\n\n5. Decision: if the maximum horsepower exceeds 2 HP, specify that two identical pumps should operate in parallel; otherwise, one pump suffices.\n\n6. For each scenario, compute daily energy consumption: daily_kWh_i = Q̇_i (kW) × 24 hours. Then compute monthly energy cost over the next 30 days at $0.10 per kWh: monthly_cost_i = daily_kWh_i × 30 × 0.10.\n\n7. Compute the average monthly energy cost across the three scenarios.\n\n8. Cross-validate consumption of the 200 gpm scenario by converting its monthly_kWh from kilowatt-hour to Btu.\n\nProvide a structured report listing all intermediate values (temperature conversions, ΔT, volumetric flows, mass flows, heat duties, horsepower values, mean/median/max horsepower, pump count decision, daily_kWh, monthly_cost_i, average monthly cost, and cross-converted Btu result) and the final pump selection recommendation.",
-          "fuzzy_description": "Hey, I’m working on a hot-water pumping system and my boss is breathing down my neck for all the numbers. We’ve got water coming in at 50 °F and it needs to leave at 120 °F, and we’re looking at flow rates of 150, 200, and 250 gallons per minute. I need to see those temperatures in °C, convert the gpm figures into cubic meters per second, and turn the water density (1 g/cm³) into kg/m³. From there, I want to calculate the mass flow, use Cp = 4.186 kJ/(kg·K) to get the heat duty in kW, then convert that to horsepower. Once we have the three horsepower numbers, I’d like the average, median, and maximum so I can decide whether one pump will do or if I really need two in parallel (anything above 2 HP means two). After that, I need the daily energy use in kWh for each case, the cost over 30 days at $0.10 per kWh, and the average monthly cost across all three. And just to be sure, could you cross-check the 200 gpm scenario by converting its monthly kWh figure into BTU? I really need every intermediate value—temperature conversions, ΔT, volumetric and mass flows, heat duties, horsepower, energy use, costs, plus the pump recommendation—so I can back it all up with solid data.\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
-          "dependency_analysis": "We define a deep chain of dependencies across Unit Converter and Math MCP servers, plus a cross-server validation step:  \n\n• Step 1 (parallel conversions via Unit Converter:convert_batch): batch-convert two temperatures, three volumes, and one density value.  \n  - This shows parallel tool usage where multiple results are produced simultaneously.  \n\n• Step 2 (Math MCP:subtract): compute ΔT from the two temperature conversions.  \n\n• Step 3 (for each of three volumes):  \n  – Math MCP:division to turn m³/min into m³/s (volume conversion output feeds into division).  \n  – Math MCP:multiply to compute mass flow (uses volumetric flow × density from batch).  \n  – Math MCP:multiply twice to compute Q̇ (mass flow × Cp, then × ΔT).  \n  – Unit Converter:convert_power to convert Q̇ (kW → horsepower).  \n\n  These show a sequential chain per scenario with branching (three parallel branches).  \n\n• Step 4 (Math MCP:mean, median, max): combine the three horsepower results to find central tendency and extremes.  \n\n• Step 5 (decision point): a conditional branch—if max HP > 2 HP → two pumps, else one pump.  \n\n• Step 6 (per scenario cost calculation):  \n  – Math MCP:multiply to get daily kWh (Q̇_kW × 24).  \n  – Math MCP:multiply for monthly consumption (daily kWh × 30).  \n  – Math MCP:multiply to get cost (monthly kWh × 0.10).  \n\n• Step 7 (Math MCP:mean): average the three monthly costs.  \n\n• Step 8 (Unit Converter:convert_energy): cross-validation by converting the 200 gpm scenario’s monthly consumption from kWh → Btu.  \n\nCross-server dependencies: Unit Converter outputs drive Math MCP operations (e.g., volume → math division; density → math multiplication). The final cost and horsepower values loop back into Unit Converter for energy conversion verification. This end-to-end workflow cannot run without orchestrating these tool calls in the specified order and combining parallel branches into global metrics and decisions.",
-          "distraction_servers": [
-            "Context7",
-            "FruityVice",
-            "Google Maps",
-            "Huge Icons",
-            "Hugging Face",
-            "Movie Recommender",
-            "NixOS",
-            "OpenAPI Explorer",
-            "Paper Search",
-            "Weather Data"
-          ]
-        }
-      ],
-      "servers": [
-        "Unit Converter",
-        "Math MCP"
-      ],
-      "combination_name": "Conversion Tools",
-      "combination_type": "two_server_combinations"
-    },
-    {
-      "server_name": "Game Trends+Reddit",
-      "tasks": [
-        {
-          "task_id": "game_trends_reddit_000",
-          "task_description": "Generate a cross-platform Weekly Gaming Trend & Community Sentiment Report for the upcoming week. The agent must:\n1. Verify the Game Trends API is healthy.\n2. In parallel, fetch Steam’s current trending games, top sellers, and most-played titles; also fetch Epic Games Store’s current trending games and currently free or upcoming free titles.\n3. From Steam data, compute a combined score for each title: 40% weight to trending rank, 30% to sales rank, and 30% to player count rank. Select the top five scored Steam titles.\n4. From Epic data, mark which of those five titles appear in Epic’s trending list and which of those are currently free or upcoming free.\n5. Identify the three titles that are (a) among Steam’s top five by score and (b) present in Epic’s trending list. If fewer than three satisfy both, include the next highest-scored Steam title that is in Epic’s free or upcoming free lists.\n6. Cross-validate these three titles against the unified list from get_all_trending_games. If any title is missing, flag a data inconsistency for that title.\n7. For each of the three selected games:\n   a. Attempt to fetch up to 10 hot Reddit threads from the game’s subreddit (subreddit name exactly matching the game title).  \n   b. If fewer than five threads are returned, fallback to fetching the top five threads from r/gaming.  \n   c. For each thread ID retrieved, fetch the full post content with up to three top-level comments and comment depth of two.\n8. Summarize for each game: Steam rank metrics, Epic status (trending/free), inconsistency flags, and a brief sentiment overview derived from the Reddit post titles and comments.\n\nOutput the report as a JSON array of three objects, each with fields: {\"game_name\",\"steam_trending_rank\",\"steam_sales_rank\",\"steam_played_rank\",\"epic_status\",\"inconsistency_flag\",\"reddit_threads\": [{\"post_id\",\"title\",\"top_comments\": [\"comment1\",\"comment2\",…]}],\"sentiment_summary\"}.",
-          "fuzzy_description": "Hey, I’m prepping our next gaming newsletter and the boss wants a quick but solid rundown of which titles are going to crush it over the coming week on both Steam and the Epic store—bonus points if any are currently free or about to be. Could you dig into Steam’s hot trends, top sellers, and player counts, figure out the handful of games that really stand out when you weight those metrics, and then see which of those also show up as trending or freebies on Epic? I’d love to land on three final picks that bridge both platforms—or if we come up short, swap in the next best one that’s free on Epic. Also, it’d be great to cross-check against a general trending feed just to catch any odd gaps. Once we’ve got our trio, can you pull the top threads from each game’s subreddit (or fallback to r/gaming if they’re quiet), grab a few key comments, and give me a quick sentiment snapshot for each? I need it in a neat format I can drop straight into our tool—and it really has to be backed by real numbers and actual chatter, since I’ll need to show my editor the proof. Thanks!",
-          "dependency_analysis": "1. Sequential health check: get_api_health must succeed before any data retrieval.  \n2. Parallel data pulls: Steam calls (get_steam_trending_games, get_steam_top_sellers, get_steam_most_played) run concurrently; Epic calls (get_epic_trending_games, get_epic_free_games) run concurrently.  \n3. Data fusion: Steam outputs feed directly into a scoring algorithm that weights trending, sales, and play data.  \n4. Branching decision: intersect top five scored Steam titles with Epic trending; if intersection < 3, extend with free-or-upcoming titles.  \n5. Cross-server validation: the final three titles are checked against get_all_trending_games; mismatches are flagged.  \n6. Reddit dependency chain: for each title, fetch_reddit_hot_threads(subreddit=title); if thread count < 5, fallback to fetch_reddit_hot_threads(subreddit=\"gaming\").  \n7. Iterative refinement: each thread ID feeds into fetch_reddit_post_content to retrieve comments.  \n8. Aggregation: sentiment_summary is derived from the collected Reddit post titles and comments.  \nCritical decision points include fallback to r/gaming and selection adjustment when Steam–Epic intersection is insufficient. Cross-server dependencies ensure consistency between Game Trends (all servers) and Reddit data for community sentiment.",
-          "distraction_servers": [
-            "Context7",
-            "DEX Paprika",
-            "Math MCP",
-            "Medical Calculator",
-            "Movie Recommender",
-            "National Parks",
-            "NixOS",
-            "OSINT Intelligence",
-            "OpenAPI Explorer",
-            "Paper Search"
-          ]
-        }
-      ],
-      "servers": [
-        "Game Trends",
-        "Reddit"
-      ],
-      "combination_name": "Entertainment Social",
-      "combination_type": "two_server_combinations"
-    },
-    {
-      "server_name": "Game Trends+Reddit",
-      "tasks": [
-        {
-          "task_id": "game_trends_reddit_001",
-          "task_description": "Perform a cross‐platform, cross‐server analysis to identify and investigate games with the largest gap between social interest and actual engagement metrics over the past week. Steps:\n1. Call Game Trends:get_api_health to check API status.\n   • If status is OK, call Game Trends:get_all_trending_games to retrieve a combined list of trending titles across Steam and Epic.\n   • If status is not OK, call Game Trends:get_steam_trending_games and Game Trends:get_epic_trending_games separately, then merge their results into one trending list.\n2. Call Game Trends:get_epic_free_games to retrieve all current and upcoming free titles on Epic Games Store, and tag any of those in the merged trending list with Free=Yes.\n3. In parallel, call Game Trends:get_steam_top_sellers and Game Trends:get_steam_most_played to get Steam’s current top‐selling and most‐played lists.\n4. For each game in the merged trending list:\n   a. If it appears in Steam top sellers, record its sales rank; otherwise mark SalesRank=None.\n   b. If it appears in Steam most played, record its player count rank; otherwise mark PlayerRank=None.\n   c. Compute a ‘difference_score’ = |TrendingRank – SalesRank| + |TrendingRank – PlayerRank| (treat None as a large penalty).\n5. Sort all trending games by descending difference_score and select the top 3 titles for deeper analysis.\n6. Call Reddit:fetch_reddit_hot_threads with subreddit=\"gaming\" and limit=50 to retrieve hot posts. For each of the top 3 games, scan the thread titles for mentions of the exact game name and count how many posts mention it.\n7. Identify which of the three has the highest reddit_mentions_count. For that single game, pick the highest‐scoring thread ID and call Reddit:fetch_reddit_post_content with comment_limit=20 and comment_depth=3 to retrieve detailed discussion.\n8. Produce a JSON report listing, for each of the three games: name, platform source(s), trending rank, sales rank, player rank, difference_score, Free tag (Yes/No), reddit_mentions_count; and for the game with the highest buzz, include the reddit_top_post_id and full reddit_comments output.",
-          "fuzzy_description": "Hey, I’m working on a little side project to spot games that are huge on social hype but aren’t really selling or being played nearly as much—and I want to focus on the past week. You know how some titles suddenly shoot up the trending list on the big PC storefronts but then their sales rank or concurrent player count barely budges? I’d love to pull together all those trending picks, check their actual sales rank and player-count rank to come up with a simple “hype-vs-real” gap score, and tag any that happen to be free deals. Then, I want to zero in on the top three biggest mismatches and see how often each one pops up in the main gaming discussion community—counting how many hot threads mention them. For the single game that gets the most chatter, could you grab the most popular thread ID and pull about 20 comments (going down a few reply levels) so I can see what folks are saying? In the end, I need a clear breakdown for each of the three—name, where it trended, hype rank, sales rank, player rank, gap score, free-yes/no, mention count—and for that buzziest title include the top thread ID plus its comment snippet. I really need solid numbers and actual sources from the last seven days—no vague guesses—so I can back this up.\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
-          "dependency_analysis": "Inherent dependencies:\n- get_api_health decides whether to call get_all_trending_games or fallback to get_steam_trending_games + get_epic_trending_games.\n- get_all_trending_games (or merged per‐platform trending) produces the master trending list used by all downstream steps.\n- get_epic_free_games output is cross‐referenced against the trending list to tag free titles.\n- get_steam_top_sellers and get_steam_most_played provide metrics that feed into difference_score computations.\n- fetch_reddit_hot_threads output is filtered by game names from the trending list to measure community buzz.\n- fetch_reddit_post_content is triggered by the hottest thread ID found in the filtered Reddit data.\n\nScenario‐based dependencies:\n- Decision point after API health: branch into unified vs. separate trending calls.\n- Merged trending list then drives tagging, metric lookups, and score calculations in sequence.\n- Parallel calls for sales and player metrics reduce latency and converge into the same data structure for scoring.\n- After scoring and selecting the top 3 games, Reddit calls depend on that selection to query community data.\n- A second decision point chooses which of the top 3 games has the highest reddit_mentions_count and triggers a deeper fetch_reddit_post_content.\n\nParallel vs sequential:\n- Initial health check → sequential trending calls.\n- Epic free games tagging waits for merged trending list → sequential.\n- Steam top sellers and most played can run in parallel → join for scoring.\n- Reddit hot threads fetch is one call → filter and decision → conditional post content fetch.\n\nCross‐server dependencies:\n- Game Trends outputs (trending, sales, play stats, free games) determine parameters and filtering logic for Reddit queries.\n- Reddit community buzz data validates and contextualizes platform metrics, highlighting discrepancies.\n- Branching logic ensures robustness if Game Trends API health is degraded, falling back to per‐platform calls without external inputs.",
-          "distraction_servers": [
-            "Context7",
-            "FruityVice",
-            "Medical Calculator",
-            "Metropolitan Museum",
-            "Movie Recommender",
-            "NASA Data",
-            "National Parks",
-            "Paper Search",
-            "Scientific Computing",
-            "Wikipedia"
-          ]
-        }
-      ],
-      "servers": [
-        "Game Trends",
-        "Reddit"
-      ],
-      "combination_name": "Entertainment Social",
-      "combination_type": "two_server_combinations"
-    },
-    {
-      "server_name": "Scientific Computing+Unit Converter",
-      "tasks": [
-        {
-          "task_id": "scientific_computing_unit_converter_000",
-          "task_description": "You are designing a coordinate transformation pipeline for a two-joint robotic arm segment. Joint 1 has an angle of 45° and link length of 12 inches; Joint 2 has an angle of –30° and link length of 8 inches. Perform the following steps in order:\n\n1. Convert joint angles from degrees to radians.\n2. Convert link lengths from inches to meters.\n3. Create two 3×3 rotation matrices R1 and R2 for rotations about the Z-axis by the converted angles.\n4. Multiply R1 and R2 to obtain the composite rotation R12.\n5. Construct the full 4×4 homogeneous transform T12:\n     [ R12   t; 0  1 ], where t = [0.3048+0.7071*0.2032, 0+0.7071*0.2032, 0].\n6. Verify orthonormality of R12 by:\n     a. Computing R12ᵀ @ R12.\n     b. Subtracting the 3×3 identity matrix to get an orthonormality error matrix.\n     c. Reporting the error matrix.\n7. Compute the determinant of R12 to ensure no reflection occurs.\n8. If the maximum absolute element in the orthonormality error exceeds 1e-6, perform QR decomposition on R12 and let R12_corr = Q; otherwise set R12_corr = R12.\n9. Find an orthonormal basis for the column space of R12_corr.\n10. Create and store an external force vector F = [5, –3, 2] N and a gravity vector G = [0, 0, –9.81] m/s².\n11. Project F onto the first orthonormal basis vector to obtain F_proj.\n12. Compute the dot product between F_proj and F.\n13. Compute the cross product between F_proj and G.\n14. Compute the directional derivative of the gravitational potential energy U = m·g·z with m=5 kg, g=9.81 m/s² along the direction of F_proj.\n\nDeliverables (all numeric arrays as stored tensor names and scalar results):\n- R1, R2, R12, T12\n- Orthonormality error matrix\n- Determinant of R12\n- Q and R if QR decomposition was applied\n- Orthonormal basis vectors\n- F_proj vector\n- Dot product scalar\n- Cross product vector\n- Directional derivative expression",
-          "fuzzy_description": "I’m working on a little two-joint robot arm for my project and honestly I’m getting stuck on all the math. The first hinge sits at exactly 45° with a 12-inch link, and the second swings to –30° on an 8-inch link. I know I have to switch those angles into radians and turn the inches into meters, then build two Z-axis rotation matrices, multiply them together, and pack everything into a 4×4 homogeneous transform. For my offset I’m using t = [0.3048 + 0.7071 * 0.2032, 0 + 0.7071 * 0.2032, 0]. After that I’d like to check RᵀR against the identity and see if any entry exceeds 1e-6—if it does I’ve heard a QR tweak might fix it. Beyond that I need to pull an orthonormal basis from the corrected rotation, shoot an external force F = [5, –3, 2] N onto the first basis vector, find the dot with the original F, cross it with gravity G = [0, 0, –9.81], and even get the directional derivative of U = m·g·z (with m=5 kg and g=9.81 m/s²) along that projection. I really need all the actual numbers—R1, R2, R12, the full T12, the tiny error matrix, the determinant, Q/R if you do the QR, the basis vectors, F_proj, the dot and cross results, plus the derivative—because I’ve got to present this with solid data next week, not hand-wavy estimates.\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
-          "dependency_analysis": "This scenario requires both Unit Converter and Scientific Computing tools in a tightly coupled workflow:\n\n1. Cross-Server Conversion → Matrix Construction:\n   - convert_angle maps given angles (45°, –30°) → radians. These radian values feed directly into create_tensor for R1 and R2.\n   - convert_length maps link lengths (12 in, 8 in) → meters. These metric lengths determine translation vector components in T12.\n\n2. Sequential Matrix Pipeline:\n   - create_tensor(R1), create_tensor(R2) → multiply_matrices → R12.\n   - create_tensor(T12) uses R12 and pre-computed translation t.\n\n3. Orthonormality Validation Branch:\n   - transpose(R12) + multiply_matrices → R12ᵀ @ R12.\n   - create_tensor(I3) + subtract_matrices → error matrix.\n   - determinant(R12) for reflection check.\n   - Decision point: if max(error) >1e-6 → qr_decompose(R12) → Q (use Q as corrected rotation); else skip.\n\n4. Basis and Force Analysis Chain:\n   - find_orthonormal_basis on R12_corr → orthonormal columns.\n   - create_tensor(F), create_tensor(G).\n   - vector_project(F onto first basis vector) → F_proj.\n   - create_tensor(F_proj) to persist result for further operations.\n   - vector_dot_product(F_proj, F) and vector_cross_product(F_proj, G).\n\n5. Symbolic Directional Derivative:\n   - directional_deriv of f_str=\"5*9.81*z\" along u=F_proj (unit normalization) → expression.\n\nCritical decision: the orthonormality error matrix determines whether to invoke QR decomposition. The pipeline is strictly sequential, with cross-server conversions at the start feeding into scientific computations. Each tool’s output is the direct input to the next, forming a deep dependency chain that cannot be bypassed.",
-          "distraction_servers": [
-            "Bibliomantic",
-            "Call for Papers",
-            "Context7",
-            "DEX Paprika",
-            "Google Maps",
-            "Movie Recommender",
-            "NASA Data",
-            "National Parks",
-            "NixOS",
-            "Weather Data"
-          ]
-        }
-      ],
-      "servers": [
-        "Scientific Computing",
-        "Unit Converter"
-      ],
-      "combination_name": "Research Tools",
-      "combination_type": "two_server_combinations"
-    },
-    {
-      "server_name": "Scientific Computing+Unit Converter",
-      "tasks": [
-        {
-          "task_id": "scientific_computing_unit_converter_001",
-          "task_description": "Simulate and analyze a 4×4 homogeneous transformation matrix for a rocket nozzle segment using physical parameters with mixed units, then perform a full linear-algebraic and symbolic analysis, including conditional scaling and vector operations, and finally visualize a related vector field.\n\nSteps:\n1. Convert the stagnation temperature 518°F to Kelvin.\n2. Convert the nozzle throat diameter 16 inches to meters.\n3. Convert the flow deflection angle 45° to radians.\n4. Convert the total energy input 5000 Btu to kilojoules.\n5. Using those converted values (T_K, d_m, θ_rad, E_kJ), create two 4×4 tensors:\n   • M1 (homogeneous transform):\n     [[cos(θ_rad), -sin(θ_rad), 0, d_m/2],\n      [sin(θ_rad),  cos(θ_rad), 0,     0],\n      [         0,           0, 1,     0],\n      [         0,           0, 0,     1]]\n   • M2 (diagonal physical scaling): diag([T_K, E_kJ, 1, 1])\n6. Compute M = M1 @ M2 (matrix multiplication).\n7. Compute det(M). If |det(M) − 1| < 1e-6, record “volume-preserving”; otherwise, compute scale_factor = det(M)**(−1/4), apply in-place scaling to M to enforce det=1, and record the new determinant.\n8. Compute M⁻¹, the eigenvalues and eigenvectors of M, its SVD (U, S, Vᵀ), its column-space orthonormal basis, the representation of M in that basis (change_basis), and its rank.\n9. Create two 3-component vectors v1 = [T_K, E_kJ, 0] and v2 = [E_kJ, T_K, 0]. Compute their dot product, cross product, and the projection of v1 onto v2.\n10. Symbolically compute the gradient of f(x,y,z)=x*y*z; compute the directional derivative of f along u=[1,1,1] (unitized); compute the curl of F=[x*y, y*z, z*x] and its divergence at point [1,2,3]; compute the Laplacian of f(x,y,z).\n11. Plot the 3D vector field F_plot=[z, -y, x] over bounds x,y,z∈[−1,1] with resolution n=8.\n\nProduce a structured report containing: all converted scalar values; the tensors M1, M2, M (before and after any scaling); det(M) (before and after); scale_factor if applied; M⁻¹; eigenvalues and eigenvectors; U, S, Vᵀ; orthonormal basis vectors; changed-basis matrix; rank; v1⋅v2; v1×v2; projection vector; symbolic gradient; directional derivative; curl and divergence results; Laplacian; and display the vector-field plot.",
-          "fuzzy_description": "Hey, I’m racing against the clock on a little rocket‐nozzle simulation and the units just aren’t playing nice. I logged the stagnation temperature at 518 °F, the throat diameter reads 16 inches, the flow deflection is 45°, and I’ve got about 5 000 Btu of total energy input—my code only wants SI, so I need those in Kelvin, meters, radians and kilojoules. \n\nOnce I’ve got those, I’d like to build a 4×4 transform that rotates by that angle and shifts by half the diameter, then apply a physical scaling on the temperature and energy axes. After multiplying them, I need to check if the determinant is unity (volume-preserving); if it isn’t, figure out the fourth-root scale factor to force det=1 and show me the before/after. Then I want to dig into the linear algebra: the inverse of that final matrix, its eigenvalues/eigenvectors, the full SVD (U, S, Vᵀ), an orthonormal basis for its column space, how the matrix looks in that new basis, and its rank.\n\nOn top of that, I have two 3-component vectors built from those converted scalars—v₁ = [T_K, E_kJ, 0] and v₂ = [E_kJ, T_K, 0]—and I’d like their dot product, cross product, and the projection of v₁ onto v₂. Then, for some symbolic crunching, consider f(x,y,z)=x·y·z: give me ∇f and the directional derivative along the unit vector [1,1,1]. Also take F=[x y, y z, z x], compute its curl and divergence at the point [1,2,3], and give me the Laplacian of f(x,y,z). \n\nFinally, I need a quick 3D plot of the field F_plot=[z, –y, x] over x,y,z in [–1,1] with an 8×8×8 grid so I can stick it in my slides. Could you run through all of that and give me the exact converted numbers, the raw and any scaled matrices, det values (before/after) plus the scale factor if applied, the inverse, eigen stuff, U/S/Vᵀ, basis vectors, change-of-basis form, rank, the vector-operation results, the symbolic derivatives, and the plot? I really need hard numbers and visuals—no vague descriptions—so I can show my team real data. Thanks!",
-          "dependency_analysis": "This task spans both Scientific Computing and Unit Converter servers and leverages deep tool dependencies:\n\nCross-Server Data Flow:\n- Unit Converter (TEMPERATURE, LENGTH, ANGLE, ENERGY) ➔ Scientific COMPUTING:create_tensor: the converted scalars (T_K, d_m, θ_rad, E_kJ) drive tensor creation.\n\nSequential Linear-Algebra Chain:\n1. create_tensor(M1) and create_tensor(M2) produce base matrices.\n2. multiply_matrices uses M1 and M2 to yield M.\n3. determinant inspects M; decision point: if |det−1| ≥ 1e-6 then scale_matrix in_place to enforce volume preservation.\n4. matrix_inverse, compute_eigen, svd_decompose, find_orthonormal_basis, change_basis, and rank all consume the scaled or original M in sequence to build deeper analyses.\n\nConditional Branch:\n- Based on determinant check, scale_matrix is invoked only when volume preservation fails, then determinant is rechecked.\n\nParallel Vector Operations:\n- Two independent create_tensor calls for v1 and v2, feeding into vector_dot_product, vector_cross_product, and vector_project. Their results are combined in the final report.\n\nSymbolic Calculus Chain:\n- gradient ➔ directional_deriv; curl and divergence operate on the same vector field f_str at a point; laplacian reuses f_str.\n\nVisualization:\n- plot_vector_field runs last, using no numeric outputs beyond constants to render the 3D quiver plot.\n\nCritical Decision Points:\n- Determinant-based branching triggers scale_matrix.\n- The order of eigen, SVD, and basis-change ensures correct matrix state.\n\nData Dependencies:\n- Unit conversions feed numeric parameters into matrix definitions.\n- create_tensor outputs are reused by multiple analysis tools (multiply, det, inv, eig, SVD, rank, basis).\n- Symbolic tools share f_str and point coordinates.\n\nThis chain cannot be executed without understanding how outputs flow from Unit Converter tools into Scientific Computing:create_tensor, and through the sequential and conditional calls of matrix_analysis and vector/symbolic tools.",
-          "distraction_servers": [
-            "Bibliomantic",
-            "DEX Paprika",
-            "Google Maps",
-            "Hugging Face",
-            "Math MCP",
-            "Medical Calculator",
-            "Metropolitan Museum",
-            "NixOS",
-            "Paper Search",
-            "Weather Data"
-          ]
-        }
-      ],
-      "servers": [
-        "Scientific Computing",
-        "Unit Converter"
-      ],
-      "combination_name": "Research Tools",
-      "combination_type": "two_server_combinations"
-    },
-    {
-      "server_name": "Wikipedia+Paper Search",
-      "tasks": [
-        {
-          "task_id": "wikipedia_paper_search_001",
-          "task_description": "Investigate the current state of knowledge on CRISPR-Cas9 off-target effects and assess whether the Wikipedia entry needs updating. Steps:\n1. Use Wikipedia:search_wikipedia with query \"CRISPR-Cas9\" and limit 5 to find the main article title.\n2. Retrieve the full article using Wikipedia:get_article.\n3. Extract the list of sections using Wikipedia:get_sections to identify if an \"Off-target effects\" section exists.\n4. Obtain a tailored summary of off-target effects within the article using Wikipedia:summarize_article_for_query with query \"off-target effects\" and max_length 250.\n5. Extract the top 5 key facts on off-target effects using Wikipedia:extract_key_facts with topic_within_article \"off-target effects\" and count 5.\n6. Formulate the query \"CRISPR-Cas9 off-target effects\" and, in parallel, search for at least 5 papers in each of these sources:\n   • Paper Search:search_arxiv (max_results 5)\n   • Paper Search:search_pubmed (max_results 5)\n   • Paper Search:search_biorxiv (max_results 5)\n   • Paper Search:search_medrxiv (max_results 5)\n   • Paper Search:search_google_scholar (max_results 5)\n7. If any source returns fewer than 5 results, supplement from Google Scholar results to reach 5 unique papers total.\n8. From arXiv, bioRxiv, and medRxiv results take the top 2 paper IDs each, download PDFs with the respective download tool, and then read and extract the full text using the corresponding read tool.\n9. From each PDF, summarize in about 150 words the specific methods used to detect or mitigate off-target effects.\n10. Compare the 5 key facts extracted from Wikipedia with the method summaries from the downloaded papers to identify three novel detection or mitigation methods not currently reflected in the Wikipedia article.\n11. Produce a final JSON report containing:\n   • wikipedia_summary: the tailored summary of off-target effects\n   • wikipedia_key_facts: list of 5 key facts\n   • paper_metadata: object with arrays of returned metadata for each source\n   • methods_summaries: array of six 150-word summaries (two per server)\n   • novel_methods: list of three novel approaches from the papers\n   • update_recommendations: text describing how to update the Wikipedia entry to include the novel methods.",
-          "fuzzy_description": "Hey, I’m gearing up for a talk on CRISPR and its off-target editing issues, and I’m not convinced the main Wikipedia page is completely up to date. Could you peek at the off-target section there and let me know what it currently says? Then dive into the latest research—say a handful of recent papers from major preprint servers and journals over the past few months—and pull together about five key takeaways from the wiki plus roughly five papers per source. For the top two preprints, grab their PDFs and write up about 150 words each on how they detect or prevent off-target cuts. After that, compare those methods to what the wiki lists and flag three genuinely new techniques that aren’t mentioned yet. Finally, wrap it all into a single report that shows:\n\n- the current wiki summary  \n- five main facts it covers  \n- the list of papers you found  \n- the six 150-word method summaries  \n- the three novel approaches  \n- and your suggestions for updating the article\n\nI really need concrete data and solid evidence—no vague opinions—so I can confidently revise that entry.",
-          "dependency_analysis": "Inherent tool chains: search_wikipedia → get_article → get_sections → summarize_article_for_query and extract_key_facts. Scenario-based: use Wikipedia extract_key_facts topic to tailor the paper search query. Parallel vs sequential: after completing sequential Wikipedia steps, trigger parallel paper searches across arXiv, PubMed, bioRxiv, medRxiv, and Google Scholar. Decision points: if any source yields fewer than 5 papers, merge Google Scholar results to meet the minimum. Cross-server dependencies: Wikipedia output defines the query for Paper Search tools; Paper Search outputs feed into download_x → read_x for servers that support PDF. The downloaded text is then analyzed to produce method summaries. Finally, cross-validation compares Wikipedia key facts with paper findings to generate update_recommendations. This chain enforces strict sequencing and data flow, requiring each tool’s output as input for the next phases and invoking fallback logic for insufficient paper counts.",
-          "distraction_servers": [
-            "Bibliomantic",
-            "BioMCP",
-            "FruityVice",
-            "NixOS",
-            "OKX Exchange",
-            "OSINT Intelligence",
-            "OpenAPI Explorer",
-            "Reddit",
-            "Unit Converter",
-            "Weather Data"
-          ]
-        }
-      ],
-      "servers": [
-        "Wikipedia",
-        "Paper Search"
-      ],
-      "combination_name": "Knowledge Base",
-      "combination_type": "two_server_combinations"
-    },
-    {
-      "server_name": "Wikipedia+Paper Search",
-      "tasks": [
-        {
-          "task_id": "wikipedia_paper_search_003",
-          "task_description": "Compile a comprehensive report on CRISPR-Cas9 gene editing by combining foundational knowledge from Wikipedia with the latest experimental and clinical research.  \n\n1. Use the Wikipedia:search_wikipedia tool to look up “CRISPR-Cas9” (limit=1). Retrieve the article title.  \n2. Using that title, call Wikipedia:get_sections to list all section titles.  \n3. Call Wikipedia:extract_key_facts with count=5 to pull out the top five key facts from the entire article.  \n4. Check whether the sections list includes a section titled “Clinical applications”.  \n   • If “Clinical applications” is present:  \n     a. In parallel, use Paper Search:search_pubmed and Paper Search:search_medrxiv with query=\"CRISPR-Cas9 clinical trial\" and max_results=5 each.  \n   • If “Clinical applications” is not present:  \n     a. In parallel, use Paper Search:search_arxiv and Paper Search:search_biorxiv with query=\"CRISPR-Cas9 structural analysis\" and max_results=5 each.  \n5. For each of the two paper search results sets:  \n   a. Filter papers to those published in the past 6 months.  \n   b. Select the top 2 most recent papers (if fewer than 2 meet the date filter, select the 2 most recent regardless).  \n6. For each selected paper:  \n   • If from arXiv: call Paper Search:download_arxiv then Paper Search:read_arxiv_paper.  \n   • If from bioRxiv or medRxiv: call Paper Search:download_biorxiv or download_medrxiv then read_biorxiv_paper or read_medrxiv_paper.  \n   • If from PubMed: record metadata only (download_pubmed/read_pubmed_paper return unsupported messages).  \n7. From each paper’s text (or metadata for PubMed), produce a 200-word summary of methodology, sample size, key outcomes, and limitations.  \n8. Cross-validate: compare the five Wikipedia key facts against the combined paper summaries. Identify at least three points where the literature confirms, extends, or contradicts Wikipedia’s facts.  \n9. Synthesize a final JSON report with four fields:  \n   • \"foundation_summary\": a 150-word summary of CRISPR-Cas9 basics from Wikipedia.  \n   • \"latest_research_insights\": a consolidated summary of methods and outcomes from all eight papers.  \n   • \"cross_validation\": a list of at least three matched or mismatched points between Wikipedia and literature.  \n   • \"recommendations\": three concrete next-step research questions or papers to follow up on.",
-          "fuzzy_description": "I’m prepping a big briefing on CRISPR-Cas9 for my lab and my advisor keeps asking for more than just the usual Wikipedia overview. Here’s what I’m hoping you can help me with:\n\nI’d like a concise, roughly 150-word plain-English primer on how CRISPR-Cas9 works—just the five or so most essential facts someone needs to know. Then, depending on whether that basic page even mentions “clinical applications,” I want you to dig into what’s been popping up in the last six months. If there is a clinical section, focus on recent trials; if not, pivot to structural or mechanistic studies. Aim for about eight papers total—two or so from each source—summarizing for each one: what they did, sample size, core results, any glaring limitations, and actual dates so I know it’s fresh. \n\nAfter that, please line up at least three clear spots where the new studies either back up, extend, or flat-out contradict those five key wiki facts. And to wrap it all up, give me three concrete next-step questions or leads for further reading. Really need hard data and solid dates—can’t walk into my advisor’s office with just vague claims. Does that make sense?",
-          "dependency_analysis": "Inherent data flows:  \n• search_wikipedia → get_sections + extract_key_facts (Wikipedia chain)  \n• extract_key_facts output drives decision logic.  \n• search_{pubmed,medrxiv,arxiv,biorxiv} → download_{source} → read_{source} (Paper Search chain).  \n\nKey scenario dependencies:  \n• Presence/absence of 'Clinical applications' section (from get_sections) determines WHICH paper search tools to invoke (PubMed & medRxiv vs arXiv & bioRxiv).  \n• Paper metadata (search results) must be filtered by publication date, then top-2 selection drives downstream download/read calls.  \n• Only arXiv, bioRxiv, medRxiv support PDF download & reading; PubMed returns metadata only, so processing branches accordingly.  \n\nDecision points and control flow:  \n1. Branch on existence of Clinical applications section.  \n2. Parallel searches across two servers per branch.  \n3. Within each result set, an iterative loop filters by date, selects top 2, then for each paper calls different download/read tools.  \n4. Summaries from each paper are aggregated and then cross-validated against Wikipedia key facts.  \n\nSequential vs parallel:  \n• Wikipedia steps are strictly sequential (search → sections → extract facts → decision).  \n• Paper searches within each branch are parallel, but each result set undergoes its own sequential download/read pipeline.  \n\nCross-server interplay:  \n• Wikipedia informs the choice of which Paper Search servers/tools to call (server A → server B).  \n• Results from multiple paper servers are merged and compared back to Wikipedia findings for cross-validation.",
-          "distraction_servers": [
-            "Bibliomantic",
-            "Context7",
-            "DEX Paprika",
-            "FruityVice",
-            "Game Trends",
-            "Hugging Face",
-            "Movie Recommender",
-            "National Parks",
-            "OpenAPI Explorer",
-            "Reddit"
-          ]
-        }
-      ],
-      "servers": [
-        "Wikipedia",
-        "Paper Search"
-      ],
-      "combination_name": "Knowledge Base",
-      "combination_type": "two_server_combinations"
-    },
-    {
-      "server_name": "Reddit+DEX Paprika",
-      "tasks": [
-        {
-          "task_id": "reddit_dex_paprika_000",
-          "task_description": "You are a crypto research analyst. Perform an on-chain vs social signal correlation study for the Ethereum token and its top liquidity pools on the Ethereum network. Execute the following without asking for more information:  \n\n1. Call DEX Paprika:getNetworks to retrieve all supported networks and confirm “ethereum” is available.  \n2. Call DEX Paprika:search with query=\"Ethereum\" to identify the official Ethereum tokenAddress and its network.  \n3. Call DEX Paprika:getTokenDetails with network=\"ethereum\" and the discovered tokenAddress to fetch token metadata.  \n4. Call DEX Paprika:getTokenPools with network=\"ethereum\", tokenAddress from step 2, limit=10, orderBy=\"volume_usd\", sort=\"desc\" to list top pools trading Ethereum.  \n5. From the returned token pools, select the top 3 pools by USD volume.  For each of those 3 pools:  \n   a. Call DEX Paprika:getPoolDetails with network=\"ethereum\" and poolAddress to fetch pool composition and current metrics.  \n   b. Call DEX Paprika:getPoolOHLCV with network=\"ethereum\", poolAddress, start=\"7 days ago\", end=\"now\", limit=7, interval=\"24h\", inversed=false to retrieve daily OHLCV for the past 7 days.  \n   c. Call DEX Paprika:getPoolTransactions with network=\"ethereum\", poolAddress, page=0, limit=50 to retrieve the 50 most recent swap/add/remove events.  \n6. In parallel, fetch social signals:  \n   a. Call Reddit:fetch_reddit_hot_threads for subreddit=\"ethereum\", limit=5.  \n   b. Call Reddit:fetch_reddit_hot_threads for subreddit=\"cryptocurrency\", limit=5.  \n7. From each subreddit’s result, take the 3 hottest post IDs and call Reddit:fetch_reddit_post_content with post_id, comment_limit=10, comment_depth=2 to retrieve full thread content.  \n8. Analyze and cross-validate:  \n   • Correlate daily OHLCV and transaction spikes in each pool (step 5b/5c) with the timing and volume of Reddit discussions (step 7).  \n   • Identify any mentions of “ETH”, “Ethereum”, or the specific poolAddress strings in post titles or comments.  \n9. Produce a JSON report with three sections:  \n   • on_chain_metrics: token metadata, for each of the 3 pools include pool composition, 7-day OHLCV table, transaction count summary;  \n   • social_signals: list of fetched Reddit threads (subreddit, post title, URL, total comments) and a flag if the pool or token is mentioned;  \n   • correlation_insights: for each pool, note days where volume or transaction count spiked alongside elevated Reddit discussion (count of posts/comments that day), and whether mention overlap suggests social-driven movement.",
-          "fuzzy_description": "I’m putting together a quick deep-dive on ETH and how its biggest liquidity spots are behaving versus what people are buzzing about online. First, I want to make sure I’m looking at the official Ethereum token on mainnet. Then could you find the three ETH pools moving the most USD volume right now and pull their daily 24-hour price/volume figures over the past week, plus roughly fifty of the latest swap/add/remove events for each? At the same time, grab the five hottest threads from r/ethereum and r/cryptocurrency, then dive into the three most engaging posts in each (with a handful of comments). Finally, line up any days when those pool volumes or transaction counts spike with peaks in Reddit chatter. I really need hard numbers and a clear breakdown of on-chain metrics, social buzz, and any patterns that suggest the two are linked—can you help me nail that down?\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
-          "dependency_analysis": "Inherent dependencies:  \n- All Dex Paprika network-specific calls require an initial getNetworks.  \n- The search→getTokenDetails→getTokenPools chain drives pool selection: search yields tokenAddress for getTokenDetails and getTokenPools; getTokenPools yields poolAddresses for getPoolDetails, getPoolOHLCV, getPoolTransactions.  \n- Reddit:fetch_reddit_hot_threads returns post IDs which feed Reddit:fetch_reddit_post_content.  \n  \nScenario-based dependencies:  \n1. Use getNetworks to confirm the target network (‘ethereum’) before any other network calls.  \n2. Use search output (tokenAddress) to parameterize getTokenDetails and getTokenPools.  \n3. Parse getTokenPools to select the top 3 pools by USD volume – this decision point determines which poolAddresses drive the next three Dex calls (details, OHLCV, transactions).  \n4. Parallel execution: while on-chain data is collected for each pool, simultaneously fetch hot Reddit threads from two subreddits.  \n5. From each subreddit’s hot threads, select the 3 hottest posts (decision point) and fetch detailed comments.  \n6. Cross-server dependency: token symbols and poolAddresses from on-chain data are used to detect mentions in Reddit content – enabling correlation.  \n7. Data flow pattern: sequential chain from search→getTokenPools→per-pool analytics, parallel branch for social data, then a final merge step for correlation analysis.  \n8. Critical decision points: top token pools selection; top posts selection; mention detection for correlation.  \n9. This task cannot be executed without understanding and sequencing these tool dependencies across both Reddit and Dex Paprika servers.",
-          "distraction_servers": [
-            "Bibliomantic",
-            "Context7",
-            "FruityVice",
-            "Huge Icons",
-            "Hugging Face",
-            "Metropolitan Museum",
-            "National Parks",
-            "NixOS",
-            "OKX Exchange",
-            "Scientific Computing"
-          ]
-        }
-      ],
-      "servers": [
-        "Reddit",
-        "DEX Paprika"
-      ],
-      "combination_name": "Social Markets",
-      "combination_type": "two_server_combinations"
-    },
-    {
-      "server_name": "Reddit+DEX Paprika",
-      "tasks": [
-        {
-          "task_id": "reddit_dex_paprika_001",
-          "task_description": "You are an on-chain data analyst tasked with validating and profiling DeFi liquidity pools that are currently trending on Reddit. Execute the following steps in order, without any additional input:\n1. Call DEX Paprika:getStats to retrieve high-level statistics about the DexPaprika ecosystem.\n2. Call DEX Paprika:getNetworks to list all supported blockchain networks.\n3. Call Reddit:fetch_reddit_hot_threads with subreddit=\"cryptocurrency\" and limit=20. From the returned hot threads, identify any thread titles or URLs that contain a DEX Paprika pool page link (pattern “/pool/”). Extract up to 3 unique pool addresses from those links and record the corresponding post_id for each.\n4. For each extracted poolAddress:\n   a. Call DEX Paprika:search with query equal to the poolAddress. If the top result has type=\"pool\", record its network ID; otherwise skip this address.\n   b. Verify that the network ID appears in the list from step 2.\n   c. Call DEX Paprika:getPoolDetails with the verified network and poolAddress.\n   d. Call DEX Paprika:getPoolOHLCV with network, poolAddress, start=\"30 days ago\", limit=30, interval=\"24h\" to fetch daily price history over the past month.\n   e. Call DEX Paprika:getPoolTransactions with network, poolAddress, limit=10 to fetch the ten most recent swaps/adds/removes.\n   f. Call DEX Paprika:getNetworkPools with network, limit=5, sort=\"desc\", orderBy=\"volume_usd\" to retrieve the top five pools by volume on that network.\n   g. Call Reddit:fetch_reddit_post_content with the saved post_id, comment_limit=3, comment_depth=2 to fetch the top 3 comments on the original Reddit thread.\n5. Compile and output a comparative report for each poolAddress containing:\n   • network ID\n   • total volume_usd and liquidity from getPoolDetails\n   • average daily volume over the past 30 days (computed from OHLCV)\n   • count of the 10 most recent transactions\n   • rank of the pool by volume_usd among the network’s top 5 pools\n   • summary of the top 3 Reddit comments (text plus author)\n\nFormat your final output as a JSON array of objects, one per poolAddress, each with keys: network, poolAddress, volume_usd, liquidity_usd, avg_daily_volume_usd, recent_tx_count, rank_among_top5, reddit_comments_summary.",
-          "fuzzy_description": "I’m putting together a DeFi briefing for my trading desk and they’ve been fixated on a few liquidity pools everyone keeps linking in r/cryptocurrency. What I’d love is:\n\nSome high-level health stats on the DEX ecosystem and a quick list of which blockchains it covers, then a scan of the current top 20 hot threads on r/cryptocurrency to spot up to three unique pool page URLs. For each pool address found, can you:\n\n- Double-check it really maps to a live pool on one of the supported chains  \n- Pull its latest total volume and liquidity figures  \n- Fetch its daily price history for the past 30 days and compute the average daily volume  \n- Grab the ten most recent swap/add/remove events  \n- See how it ranks by volume against the top five pools on that same network  \n- And even bring back the first three comments from the original Reddit post for context  \n\nIdeally I’d get back a tidy JSON array where each entry has: network ID, pool address, volume_usd, liquidity_usd, avg_daily_volume_usd, recent_tx_count, rank_among_top5, plus a short summary of those top comments. I really need solid numbers here—no guesswork—so I can show the team hard data in our next meeting.",
-          "dependency_analysis": "1. Initial cross-server validation: getStats and getNetworks (DEX Paprika) establish the universe of networks.  \n2. Reddit to DEX Paprika chain: fetch_reddit_hot_threads yields threads containing pool URLs → extract poolAddress and post_id → input these into DEX Paprika:search.  \n3. Decision point: only proceed with search results whose type==\"pool\"; skip non-pool results.  \n4. Network validation: ensure search result.network matches one of the networks from getNetworks.  \n5. Sequential tool chains per poolAddress: search → getPoolDetails → getPoolOHLCV → getPoolTransactions → getNetworkPools.  \n6. Parallelism: steps 4a–4f can be executed in parallel for each poolAddress, but within each address the order is strict.  \n7. Cross-server parallel fetch: while DEX Paprika profile tools run, separately call fetch_reddit_post_content to enrich on-chain data with Reddit sentiment.  \n8. Data flow dependencies: OHLCV output feeds average-volume calculation; getNetworkPools output enables rank calculation; Reddit content provides qualitative validation.  \n9. The compiled report cross-validates on-chain metrics against social sentiment, leveraging both Reddit and DEX Paprika tools in a unified workflow.",
-          "distraction_servers": [
-            "Bibliomantic",
-            "Call for Papers",
-            "FruityVice",
-            "Huge Icons",
-            "Math MCP",
-            "Medical Calculator",
-            "Metropolitan Museum",
-            "Movie Recommender",
-            "NixOS",
-            "OpenAPI Explorer"
-          ]
-        }
-      ],
-      "servers": [
-        "Reddit",
-        "DEX Paprika"
-      ],
-      "combination_name": "Social Markets",
       "combination_type": "two_server_combinations"
     }
   ]

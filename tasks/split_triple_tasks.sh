@@ -1,14 +1,45 @@
 #!/bin/bash
 
-# Script to split mcpbench_tasks_multi_3server_runner_format.json into 2 files
-# Each file contains 9 server tasks (18 total tasks)
+# Script to split mcpbench_tasks_multi_3server_runner_format.json into N groups
+# Usage: ./split_triple_tasks.sh [--num-groups N]
+# Default: N=3 (each file contains ~6 server tasks)
 
 set -e  # Exit on any error
+
+# Default values
+NUM_GROUPS=3
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --num-groups)
+            NUM_GROUPS="$2"
+            shift 2
+            ;;
+        -h|--help)
+            echo "Usage: $0 [--num-groups N]"
+            echo "  --num-groups N    Number of groups to split into (default: 3)"
+            echo "  -h, --help        Show this help message"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+done
+
+# Validate num_groups is a positive integer
+if ! [[ "$NUM_GROUPS" =~ ^[1-9][0-9]*$ ]]; then
+    echo "Error: --num-groups must be a positive integer, got: $NUM_GROUPS"
+    exit 1
+fi
 
 INPUT_FILE="tasks/mcpbench_tasks_multi_3server_runner_format.json"
 SCRATCH_DIR="/scratch"
 
-echo "Starting decomposition of $INPUT_FILE..."
+echo "Starting decomposition of $INPUT_FILE into $NUM_GROUPS groups..."
 
 # Create scratch directory
 mkdir -p "$SCRATCH_DIR"
@@ -17,14 +48,33 @@ mkdir -p "$SCRATCH_DIR"
 echo "Extracting generation_info..."
 jq '.generation_info' "$INPUT_FILE" > "$SCRATCH_DIR/generation_info.json"
 
-# Split server_tasks into 2 groups of 9 tasks each
-echo "Splitting server_tasks into 2 groups..."
-jq '.server_tasks[0:9]' "$INPUT_FILE" > "$SCRATCH_DIR/group_0.json"
-jq '.server_tasks[9:18]' "$INPUT_FILE" > "$SCRATCH_DIR/group_1.json"
+# Calculate total number of server tasks and tasks per group
+TOTAL_SERVERS=$(jq '.server_tasks | length' "$INPUT_FILE")
+SERVERS_PER_GROUP=$((TOTAL_SERVERS / NUM_GROUPS))
+REMAINDER=$((TOTAL_SERVERS % NUM_GROUPS))
 
-# Create the 2 output files
+echo "Total server tasks: $TOTAL_SERVERS"
+echo "Splitting into $NUM_GROUPS groups (~$SERVERS_PER_GROUP servers per group)..."
+
+# Split server_tasks into groups
+for ((i=0; i<NUM_GROUPS; i++)); do
+    start=$((i * SERVERS_PER_GROUP))
+    # Distribute remainder among first groups
+    if [ $i -lt $REMAINDER ]; then
+        start=$((start + i))
+        end=$((start + SERVERS_PER_GROUP + 1))
+    else
+        start=$((start + REMAINDER))
+        end=$((start + SERVERS_PER_GROUP))
+    fi
+    
+    echo "Group $i: servers $start to $((end-1))"
+    jq ".server_tasks[$start:$end]" "$INPUT_FILE" > "$SCRATCH_DIR/group_$i.json"
+done
+
+# Create the output files
 echo "Creating output files..."
-for i in {0..1}; do
+for ((i=0; i<NUM_GROUPS; i++)); do
     echo "Creating triple_server_$i.json..."
     jq -s '{"generation_info": .[0], "server_tasks": .[1]}' \
         "$SCRATCH_DIR/generation_info.json" \
@@ -40,7 +90,7 @@ echo "=== VERIFICATION ==="
 
 # Check file counts
 echo "Verifying file structure..."
-for i in {0..1}; do
+for ((i=0; i<NUM_GROUPS; i++)); do
     server_count=$(jq '.server_tasks | length' "tasks/triple_server_$i.json")
     task_count=$(jq '[.server_tasks[].tasks | length] | add' "tasks/triple_server_$i.json")
     echo "File $i: $server_count server tasks, $task_count total tasks"
@@ -69,4 +119,4 @@ fi
 rm -f "$SCRATCH_DIR"/{generation_info.json,group_*.json,original_task_ids.txt,split_task_ids.txt}
 
 echo ""
-echo "Split complete! Files tasks/triple_server_0.json and tasks/triple_server_1.json created successfully."
+echo "Split complete! Files tasks/triple_server_0.json through tasks/triple_server_$((NUM_GROUPS-1)).json created successfully."
