@@ -185,6 +185,7 @@ def main():
                 print("-" * 60)
             
             # Compute overall weighted average
+            overall_weighted_scores = None
             if 'single_server' in results_by_type and multi_server_scores is not None:
                 single_domain_scores = results_by_type['single_server']['domain_scores']
                 
@@ -216,6 +217,27 @@ def main():
                 
                 print(f"  overall_score: {overall_weighted_scores['overall_score']:.4f}")
                 print("-" * 60)
+            
+            # Save results as JSON
+            output_data = {}
+            
+            # Add individual server type results at top level
+            for server_type, result in results_by_type.items():
+                output_data[server_type] = result['domain_scores']
+            
+            # Add aggregate results
+            if multi_server_scores is not None:
+                output_data['multi_server_aggregate'] = multi_server_scores
+            if overall_weighted_scores is not None:
+                output_data['overall_weighted_average'] = overall_weighted_scores
+            
+            output_file = os.path.join(directory, 'results.json')
+            try:
+                with open(output_file, 'w') as f:
+                    json.dump(output_data, f, indent=2)
+                print(f"\nResults saved to: {output_file}")
+            except Exception as e:
+                print(f"Error saving results to {output_file}: {e}")
         else:
             print(f"Directory not found: {directory}")
     else:
@@ -291,6 +313,7 @@ def main():
                     print("-" * 40)
                 
                 # Compute overall weighted average
+                overall_weighted_scores = None
                 if 'single_server' in results_by_type and multi_server_scores is not None:
                     single_domain_scores = results_by_type['single_server']['domain_scores']
                     
@@ -322,6 +345,27 @@ def main():
                     
                     print(f"  overall_score: {overall_weighted_scores['overall_score']:.4f}")
                     print("-" * 60)
+                
+                # Save results as JSON
+                output_data = {}
+                
+                # Add individual server type results at top level
+                for server_type, result in results_by_type.items():
+                    output_data[server_type] = result['domain_scores']
+                
+                # Add aggregate results
+                if multi_server_scores is not None:
+                    output_data['multi_server_aggregate'] = multi_server_scores
+                if overall_weighted_scores is not None:
+                    output_data['overall_weighted_average'] = overall_weighted_scores
+                
+                output_file = os.path.join(directory, 'results.json')
+                try:
+                    with open(output_file, 'w') as f:
+                        json.dump(output_data, f, indent=2)
+                    print(f"\nResults saved to: {output_file}")
+                except Exception as e:
+                    print(f"Error saving results to {output_file}: {e}")
 
 
 if __name__ == "__main__":
