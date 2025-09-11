@@ -366,7 +366,7 @@ class LLMFactory:
         if os.getenv("HUGGINGFACE_JUDGE_BASE_URL"):
             judge_base_url = os.getenv("HUGGINGFACE_JUDGE_BASE_URL")
             judge_model_name = os.getenv("HUGGINGFACE_JUDGE_MODEL")
-            if not judge_model_name:
+            if not judge_model_name and judge_base_url:
                 # Auto-detect judge model name from vllm server
                 judge_model_name = LLMFactory._detect_vllm_model(judge_base_url)
             

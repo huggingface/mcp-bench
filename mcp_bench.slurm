@@ -9,7 +9,7 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=lewis+hfc@huggingface.co
 
-# Usage: sbatch --qos=high --job-name=mcp-bench-qwen3-30b-a3b-concurrent --nodes=1 mcp_bench.slurm Qwen/Qwen3-30B-A3B-Instruct-2507 main
+# Usage: sbatch --job-name=mcp-bench-qwen3-30b-a3b --nodes=1 mcp_bench.slurm Qwen/Qwen3-30B-A3B-Instruct-2507 main
 
 # Specific configuration optimized for the Hugging Face Compute Cluster
 # Be ye warned this may not work on other clusters!
