@@ -1,33 +1,28 @@
 #!/bin/bash
+#SBATCH --ntasks-per-node=1
+#SBATCH --gres=gpu:8
+#SBATCH --partition=hopper-prod
+#SBATCH --output=/fsx/h4/logs/%x-%j.out
+#SBATCH --error=/fsx/h4/logs/%x-%j.err
+#SBATCH --requeue
+#SBATCH --time=2-00:00:00
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=lewis+hfc@huggingface.co
 
-# MCP-Bench Local Evaluation Script with Separate Judge Model
-#
-# This script runs MCP-Bench evaluation with separate agent and judge models served by vLLM.
-# The agent model runs on GPUs 0,1,2,3 and the judge model runs on GPUs 4,5,6,7.
-#
-# Usage Examples:
-#   # Run with default values
-#   ./run_benchmark_local.sh
-#
-#   # Run with custom models
-#   ./run_benchmark_local.sh --model meta-llama/Llama-3.1-8B-Instruct --judge meta-llama/Llama-3.1-70B-Instruct
-#
-#   # Run with custom tasks file
-#   ./run_benchmark_local.sh --tasks_file tasks/single_server_0.json
-#
-# Default Values:
-#   --model: Qwen/Qwen3-4B-Instruct-2507
-#   --revision: main
-#   --judge: Qwen/Qwen3-4B-Thinking-2507  
-#   --tasks_file: tasks/test.json
+# Usage: sbatch --job-name=mcp-bench-qwen3-30b-a3b --nodes=1 mcp_bench.slurm Qwen/Qwen3-30B-A3B-Instruct-2507 main
+
+# Specific configuration optimized for the Hugging Face Compute Cluster
+# Be ye warned this may not work on other clusters!
+module load cuda/12.9
 
 # Needed for vLLM / LiteLLM
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 export TORCH_COMPILE_DISABLE=1
-
 # Set up environment variables for MCP-Bench
 export HUGGINGFACE_BASE_URL="http://localhost:8000/v1"
 export HUGGINGFACE_JUDGE_BASE_URL="http://localhost:8001/v1"
+
+set -x -e
 
 # Record start time for timing the evaluation
 SCRIPT_START_TIME=$(date +%s)
@@ -103,36 +98,7 @@ function get_reasoning_parser {
 # Default values
 AGENT_MODEL_ID="Qwen/Qwen3-4B-Instruct-2507"
 MODEL_REVISION="main"
-JUDGE_MODEL_ID="Qwen/Qwen3-4B-Thinking-2507"
-TASKS_FILE="tasks/test.json"
-
-# Parse command line arguments
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        --model)
-            AGENT_MODEL_ID="$2"
-            shift 2
-            ;;
-        --revision)
-            MODEL_REVISION="$2"
-            shift 2
-            ;;
-        --judge)
-            JUDGE_MODEL_ID="$2"
-            shift 2
-            ;;
-        --tasks_file)
-            TASKS_FILE="$2"
-            shift 2
-            ;;
-        *)
-            echo "Unknown option $1"
-            echo "Usage: $0 [--model <model_id>] [--revision <revision>] [--judge <judge_model_id>] [--tasks_file <tasks_file>]"
-            echo "Defaults: --model Qwen/Qwen3-4B-Instruct-2507 --revision main --judge Qwen/Qwen3-4B-Thinking-2507 --tasks_file tasks/test.json"
-            exit 1
-            ;;
-    esac
-done
+JUDGE_MODEL_ID="Qwen/Qwen3-30B-A3B-Instruct-2507"
 
 TIMESTAMP=$(date +"%Y-%m-%dT%H-%M-%S")
 OUTPUT_DIR="eval_results/$AGENT_MODEL_ID/$MODEL_REVISION/mcp_bench/$TIMESTAMP"
@@ -209,7 +175,6 @@ CUDA_VISIBLE_DEVICES=4,5,6,7 nohup vllm serve $JUDGE_MODEL_ID --revision $MODEL_
     --enable-auto-tool-choice \
     --tool-call-parser $JUDGE_TOOL_PARSER \
     --reasoning-parser $JUDGE_REASONING_PARSER \
-    --no-enable-chunked-prefill \
     --host 0.0.0.0 --port 8001 \
     >"$OUTPUT_DIR/llm_judge_8001.log" 2>&1 &
 
@@ -220,14 +185,59 @@ wait_for_server 8001 "Judge"
 
 echo "Running MCP-Bench evaluation..."
 echo "Results will be saved to $OUTPUT_DIR"
-python run_benchmark.py \
-    --models huggingface \
-    --judge-provider huggingface-judge \
-    --tasks-file "$TASKS_FILE" \
-    --distraction-count 0 --disable-judge-stability \
-    --output "$OUTPUT_DIR/results.json" \
-    --enable-cache \
-    --cache-dir "$OUTPUT_DIR/cache"
+# Store benchmark PIDs
+BENCHMARK_PIDS=()
+
+# Count task files dynamically
+SINGLE_SERVER_COUNT=$(ls tasks/single_server_*.json 2>/dev/null | wc -l)
+DOUBLE_SERVER_COUNT=$(ls tasks/double_server_*.json 2>/dev/null | wc -l)
+TRIPLE_SERVER_COUNT=$(ls tasks/triple_server_*.json 2>/dev/null | wc -l)
+
+echo "Found $SINGLE_SERVER_COUNT single-server tasks, $DOUBLE_SERVER_COUNT double-server tasks, $TRIPLE_SERVER_COUNT triple-server tasks"
+
+# Run single-server tasks
+for ((i=0; i<SINGLE_SERVER_COUNT; i++)); do
+    echo "Running single-server task set $i..."
+    python run_benchmark.py --models huggingface \
+        --judge-provider o4-mini \
+        --tasks-file tasks/single_server_${i}.json \
+        --output $OUTPUT_DIR/results_single_server_${i}.json \
+        --cache-dir $OUTPUT_DIR/cache_single_server_${i} \
+        >"$OUTPUT_DIR/single_server_${i}.log" 2>&1 &
+    
+    BENCHMARK_PIDS+=($!)  # Capture the PID of the background process
+done
+
+# Run double-server tasks
+for ((i=0; i<DOUBLE_SERVER_COUNT; i++)); do
+    echo "Running double-server task set $i..."
+    python run_benchmark.py --models huggingface \
+        --judge-provider o4-mini \
+        --tasks-file tasks/double_server_${i}.json \
+        --output $OUTPUT_DIR/results_double_server_${i}.json \
+        --cache-dir $OUTPUT_DIR/cache_double_server_${i} \
+        >"$OUTPUT_DIR/double_server_${i}.log" 2>&1 &
+
+    BENCHMARK_PIDS+=($!)  # Capture the PID of the background process
+done
+
+# Run triple-server tasks
+for ((i=0; i<TRIPLE_SERVER_COUNT; i++)); do
+    echo "Running triple-server task set $i..."
+    python run_benchmark.py --models huggingface \
+        --judge-provider o4-mini \
+        --tasks-file tasks/triple_server_${i}.json \
+        --output $OUTPUT_DIR/results_triple_server_${i}.json \
+        --cache-dir $OUTPUT_DIR/cache_triple_server_${i} \
+        >"$OUTPUT_DIR/triple_server_${i}.log" 2>&1 &
+
+    BENCHMARK_PIDS+=($!)  # Capture the PID of the background process
+done
+
+# Wait only for benchmark processes to complete
+for pid in "${BENCHMARK_PIDS[@]}"; do
+    wait $pid
+done
 
 # Calculate and display total runtime
 SCRIPT_END_TIME=$(date +%s)
