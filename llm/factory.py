@@ -362,6 +362,22 @@ class LLMFactory:
                 model_name=model_name
             )
         
+        # Separate Hugging Face judge model configuration
+        if os.getenv("HUGGINGFACE_JUDGE_BASE_URL"):
+            judge_base_url = os.getenv("HUGGINGFACE_JUDGE_BASE_URL")
+            judge_model_name = os.getenv("HUGGINGFACE_JUDGE_MODEL")
+            if not judge_model_name:
+                # Auto-detect judge model name from vllm server
+                judge_model_name = LLMFactory._detect_vllm_model(judge_base_url)
+            
+            configs["huggingface-judge"] = ModelConfig(
+                name="huggingface-judge",
+                provider_type="openai_compatible",
+                api_key=os.getenv("HUGGINGFACE_JUDGE_API_KEY", "dummy-key"),
+                base_url=judge_base_url,
+                model_name=judge_model_name
+            )
+        
         return configs
     
     @staticmethod
