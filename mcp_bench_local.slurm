@@ -98,7 +98,7 @@ function get_reasoning_parser {
 # Default values
 AGENT_MODEL_ID="Qwen/Qwen3-4B-Instruct-2507"
 MODEL_REVISION="main"
-JUDGE_MODEL_ID="Qwen/Qwen3-30B-A3B-Instruct-2507"
+JUDGE_MODEL_ID="Qwen/Qwen3-32B"
 
 TIMESTAMP=$(date +"%Y-%m-%dT%H-%M-%S")
 OUTPUT_DIR="eval_results/$AGENT_MODEL_ID/$MODEL_REVISION/mcp_bench/$TIMESTAMP"
@@ -199,7 +199,7 @@ echo "Found $SINGLE_SERVER_COUNT single-server tasks, $DOUBLE_SERVER_COUNT doubl
 for ((i=0; i<SINGLE_SERVER_COUNT; i++)); do
     echo "Running single-server task set $i..."
     python run_benchmark.py --models huggingface \
-        --judge-provider o4-mini \
+        --judge-provider huggingface-judge \
         --tasks-file tasks/single_server_${i}.json \
         --output $OUTPUT_DIR/results_single_server_${i}.json \
         --cache-dir $OUTPUT_DIR/cache_single_server_${i} \
@@ -212,7 +212,7 @@ done
 for ((i=0; i<DOUBLE_SERVER_COUNT; i++)); do
     echo "Running double-server task set $i..."
     python run_benchmark.py --models huggingface \
-        --judge-provider o4-mini \
+        --judge-provider huggingface-judge \
         --tasks-file tasks/double_server_${i}.json \
         --output $OUTPUT_DIR/results_double_server_${i}.json \
         --cache-dir $OUTPUT_DIR/cache_double_server_${i} \
@@ -225,7 +225,7 @@ done
 for ((i=0; i<TRIPLE_SERVER_COUNT; i++)); do
     echo "Running triple-server task set $i..."
     python run_benchmark.py --models huggingface \
-        --judge-provider o4-mini \
+        --judge-provider huggingface-judge \
         --tasks-file tasks/triple_server_${i}.json \
         --output $OUTPUT_DIR/results_triple_server_${i}.json \
         --cache-dir $OUTPUT_DIR/cache_triple_server_${i} \
