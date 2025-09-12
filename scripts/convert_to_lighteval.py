@@ -3,10 +3,10 @@
 Convert results.json to LightEval schema format.
 
 Usage:
-    python convert_to_lighteval.py <results_json_path> <model_name>
+    python scripts/convert_to_lighteval.py <results_json_path> <model_name> <model_revision>
 
 Example:
-    python convert_to_lighteval.py eval_results/Qwen/Qwen3-4B-Instruct-2507/main/mcp_bench/baseline-o4-mini-judge/results.json Qwen3-4B-Instruct-2507
+    python scripts/convert_to_lighteval.py --results_path eval_results/Qwen/Qwen3-4B-Instruct-2507/main/mcp_bench/baseline-o4-mini-judge/results.json --model_name Qwen3-4B-Instruct-2507 --revision main
 """
 
 import json
@@ -52,25 +52,19 @@ def extract_metrics_from_server_data(server_data):
     return sorted(metrics)
 
 
-def flatten_server_results(server_data, prefix=""):
-    """Flatten nested server results dictionary."""
-    flattened = {}
+def group_server_results(server_data):
+    """Group server results by category while preserving nested structure."""
+    grouped = {}
     
     for key, value in server_data.items():
-        if isinstance(value, (int, float)):
-            if prefix:
-                metric_name = f"{prefix}_{key}"
-            else:
-                metric_name = key
-            flattened[metric_name] = value
-        elif isinstance(value, dict):
-            if prefix:
-                new_prefix = f"{prefix}_{key}"
-            else:
-                new_prefix = key
-            flattened.update(flatten_server_results(value, new_prefix))
+        if isinstance(value, dict):
+            # This is a category like "schema_understanding", "task_completion", etc.
+            grouped[key] = value
+        elif isinstance(value, (int, float)):
+            # This is a direct metric
+            grouped[key] = value
     
-    return flattened
+    return grouped
 
 
 def convert_to_lighteval(results_path, model_name, revision="main"):
@@ -171,8 +165,8 @@ def convert_to_lighteval(results_path, model_name, revision="main"):
         server_data = input_results[input_key]
         task_key = f"external|mcp_bench:{server_type}|0"
         
-        # Flatten server results
-        flattened_results = flatten_server_results(server_data)
+        # Group server results by category
+        grouped_results = group_server_results(server_data)
         
         # Extract metrics for this server type
         metrics = extract_metrics_from_server_data(server_data)
@@ -187,7 +181,7 @@ def convert_to_lighteval(results_path, model_name, revision="main"):
             metrics_config.append(create_metric_config(metric_name, higher_is_better))
         
         # Add to results
-        lighteval_schema["results"][task_key] = flattened_results
+        lighteval_schema["results"][task_key] = grouped_results
         
         # Add task configuration
         lighteval_schema["config_tasks"][task_key] = {
@@ -237,18 +231,44 @@ def convert_to_lighteval(results_path, model_name, revision="main"):
         # Combine all metrics from all server types
         all_metrics = {}
         for task_results in lighteval_schema["results"].values():
-            all_metrics.update(task_results)
-        lighteval_schema["results"]["all"] = all_metrics
+            # Handle nested structure for combining results
+            for category, metrics in task_results.items():
+                if isinstance(metrics, dict):
+                    # This is a category like "schema_understanding"
+                    if category not in all_metrics:
+                        all_metrics[category] = {}
+                    # Average the metrics across server types (simple approach)
+                    for metric_name, value in metrics.items():
+                        if metric_name not in all_metrics[category]:
+                            all_metrics[category][metric_name] = []
+                        all_metrics[category][metric_name].append(value)
+                else:
+                    # This is a direct metric
+                    if category not in all_metrics:
+                        all_metrics[category] = []
+                    all_metrics[category].append(metrics)
+        
+        # Average the collected metrics
+        averaged_metrics = {}
+        for category, metrics in all_metrics.items():
+            if isinstance(metrics, dict):
+                averaged_metrics[category] = {}
+                for metric_name, values in metrics.items():
+                    averaged_metrics[category][metric_name] = sum(values) / len(values)
+            else:
+                averaged_metrics[category] = sum(metrics) / len(metrics)
+                
+        lighteval_schema["results"]["all"] = averaged_metrics
     
     return lighteval_schema
 
 
 def main():
     parser = argparse.ArgumentParser(description="Convert results.json to LightEval schema format")
-    parser.add_argument("results_path", help="Path to the results.json file")
-    parser.add_argument("model_name", help="Model name (e.g., Qwen3-4B-Instruct-2507)")
-    parser.add_argument("--output", "-o", help="Output file path (optional)")
+    parser.add_argument("--results_path", help="Path to the results.json file")
+    parser.add_argument("--model_name", help="Model name (e.g., Qwen3-4B-Instruct-2507)")
     parser.add_argument("--revision", "-r", default="main", help="Model revision (default: main)")
+    parser.add_argument("--output", "-o", help="Output file path (optional)")
     
     args = parser.parse_args()
     
@@ -268,7 +288,8 @@ def main():
             # Save in same directory as input file
             input_dir = Path(args.results_path).parent
             timestamp = datetime.now().strftime("%Y-%m-%dT%H-%M-%S.%f")
-            output_path = input_dir / f"results_{timestamp}.json"
+            output_path = input_dir / f"final_results/results_{timestamp}.json"
+            output_path.parent.mkdir(parents=True, exist_ok=True)
         
         # Write output
         with open(output_path, 'w') as f:

@@ -26,8 +26,12 @@ set -x -e
 SCRIPT_START_TIME=$(date +%s)
 echo "Evaluation started at: $(date)"
 
+# Define absolute path to mcp-bench repository
+# We do this to avoid dependency bloat in trl-internal
+MCP_BENCH_DIR="/fsx/lewis/git/hf/mcp-bench"
+
 source ~/.bashrc
-source mcpbench/bin/activate
+source $MCP_BENCH_DIR/mcpbench/bin/activate
 
 # Server PIDs for cleanup
 AGENT_LLM_PID=""
@@ -72,11 +76,8 @@ function get_tool_parser {
 MODEL_ID=$1
 MODEL_REVISION=$2
 # Optional args
-[ -z "$3" ] && TENSOR_PARALLEL=False || TENSOR_PARALLEL=$3
-[ -z "$4" ] && TRUST_REMOTE_CODE=False || TRUST_REMOTE_CODE=$4
-[ -z "${5:-}" ] && LM_EVAL_REPO_ID="HuggingFaceH4/smollm3-post-training-leaderboard" || LM_EVAL_REPO_ID=$5
-[ -z "${6:-}" ] && DOMAIN="all" || DOMAIN=$6
-# $7 is reserved for system_prompt
+[ -z "${3:-}" ] && LM_EVAL_REPO_ID="HuggingFaceH4/post-training-leaderboard" || LM_EVAL_REPO_ID=$3
+[ -z "${4:-}" ] && DOMAIN="all" || DOMAIN=$4
 
 TASK_NAME="mcp_bench"
 
@@ -128,7 +129,7 @@ function wait_for_server {
     echo "$name server is up and running."
 }
 
-echo "Starting agent vLLM server on port 8000 with TP=$TP..."
+echo "Starting agent vLLM server on port 8000..."
 nohup vllm serve $MODEL_ID --revision $MODEL_REVISION \
     --tensor-parallel-size 8 \
     --trust-remote-code \
@@ -142,30 +143,32 @@ AGENT_LLM_PID=$!
 wait_for_server 8000 "Agent"
 
 echo "Running mcp-bench evaluation ..."
-echo "Trajectories results will be saved to $OUTPUT_DIR"
-
-# Run all tasks
-# python run_benchmark.py --models huggingface \
-#     --judge-provider o4-mini \
-#     --output $OUTPUT_DIR/results.json \
-#     --cache-dir $OUTPUT_DIR/cache
+echo "Results will be saved to $OUTPUT_DIR"
 
 # Store benchmark PIDs
 BENCHMARK_PIDS=()
 
+# # Debug - single task
+# python $MCP_BENCH_DIR/run_benchmark.py --models huggingface \
+#     --tasks-file $MCP_BENCH_DIR/tasks/test.json \
+#     --distraction-count 0 --disable-judge-stability \
+#     --output "$OUTPUT_DIR/results_single_server_0.json" \
+#     --cache-dir "$OUTPUT_DIR/cache_single_server_0" >"$OUTPUT_DIR/single_server_0.log" 2>&1 &
+# BENCHMARK_PIDS+=($!)  # Capture the PID of the background process
+
 # Count task files dynamically
-SINGLE_SERVER_COUNT=$(ls tasks/single_server_*.json 2>/dev/null | wc -l)
-DOUBLE_SERVER_COUNT=$(ls tasks/double_server_*.json 2>/dev/null | wc -l)
-TRIPLE_SERVER_COUNT=$(ls tasks/triple_server_*.json 2>/dev/null | wc -l)
+SINGLE_SERVER_COUNT=$(ls $MCP_BENCH_DIR/tasks/single_server_*.json 2>/dev/null | wc -l)
+DOUBLE_SERVER_COUNT=$(ls $MCP_BENCH_DIR/tasks/double_server_*.json 2>/dev/null | wc -l)
+TRIPLE_SERVER_COUNT=$(ls $MCP_BENCH_DIR/tasks/triple_server_*.json 2>/dev/null | wc -l)
 
 echo "Found $SINGLE_SERVER_COUNT single-server tasks, $DOUBLE_SERVER_COUNT double-server tasks, $TRIPLE_SERVER_COUNT triple-server tasks"
 
 # Run single-server tasks
 for ((i=0; i<SINGLE_SERVER_COUNT; i++)); do
     echo "Running single-server task set $i..."
-    python run_benchmark.py --models huggingface \
+    python $MCP_BENCH_DIR/run_benchmark.py --models huggingface \
         --judge-provider o4-mini \
-        --tasks-file tasks/single_server_${i}.json \
+        --tasks-file $MCP_BENCH_DIR/tasks/single_server_${i}.json \
         --output $OUTPUT_DIR/results_single_server_${i}.json \
         --cache-dir $OUTPUT_DIR/cache_single_server_${i} \
         >"$OUTPUT_DIR/single_server_${i}.log" 2>&1 &
@@ -176,9 +179,9 @@ done
 # Run double-server tasks
 for ((i=0; i<DOUBLE_SERVER_COUNT; i++)); do
     echo "Running double-server task set $i..."
-    python run_benchmark.py --models huggingface \
+    python $MCP_BENCH_DIR/run_benchmark.py --models huggingface \
         --judge-provider o4-mini \
-        --tasks-file tasks/double_server_${i}.json \
+        --tasks-file $MCP_BENCH_DIR/tasks/double_server_${i}.json \
         --output $OUTPUT_DIR/results_double_server_${i}.json \
         --cache-dir $OUTPUT_DIR/cache_double_server_${i} \
         >"$OUTPUT_DIR/double_server_${i}.log" 2>&1 &
@@ -189,9 +192,9 @@ done
 # Run triple-server tasks
 for ((i=0; i<TRIPLE_SERVER_COUNT; i++)); do
     echo "Running triple-server task set $i..."
-    python run_benchmark.py --models huggingface \
+    python $MCP_BENCH_DIR/run_benchmark.py --models huggingface \
         --judge-provider o4-mini \
-        --tasks-file tasks/triple_server_${i}.json \
+        --tasks-file $MCP_BENCH_DIR/tasks/triple_server_${i}.json \
         --output $OUTPUT_DIR/results_triple_server_${i}.json \
         --cache-dir $OUTPUT_DIR/cache_triple_server_${i} \
         >"$OUTPUT_DIR/triple_server_${i}.log" 2>&1 &
@@ -206,35 +209,32 @@ done
 
 shutdown_servers
 
-# # echo "Running post-processing ..."
-# python dev/scripts/evaluation/tau2_to_lighteval.py $OUTPUT_DIR/simulations/ --revision $MODEL_REVISION -o $OUTPUT_DIR/results/
+echo "Running post-processing ..."
+python $MCP_BENCH_DIR/scripts/aggregate_results.py $OUTPUT_DIR/
+python $MCP_BENCH_DIR/scripts/convert_to_lighteval.py --results_path $OUTPUT_DIR/results_aggregated.json --model_name $MODEL_ID --revision $MODEL_REVISION
 
-# OUTPUT_FILEPATHS=$(find $OUTPUT_DIR/results/ -type f -name "*result*.json")
-# for filepath in $OUTPUT_FILEPATHS; do    
-#     echo "Uploading $filepath to Hugging Face Hub..."
-#     filename=$(basename -- "$filepath")
-#     for attempt in {1..20}; do
-#         if hf upload --repo-type space --private $LM_EVAL_REPO_ID $filepath $OUTPUT_DIR/$filename; then
-#             echo "Upload succeeded for $filepath"
-#             break
-#         else
-#             # Exponential backoff with max delay of 60 seconds
-#             delay=$((2 ** (attempt - 1)))
-#             if [ $delay -gt 60 ]; then
-#                 delay=60
-#             fi
-#             echo "Upload failed for $filepath. Attempt $attempt of 20. Retrying in $delay seconds..."
-#             sleep $delay
-#         fi
-#     done
-# done
+OUTPUT_FILEPATHS=$(find $OUTPUT_DIR/final_results/ -type f -name "*result*.json")
+for filepath in $OUTPUT_FILEPATHS; do    
+    echo "Uploading $filepath to Hugging Face Hub..."
+    filename=$(basename -- "$filepath")
+    for attempt in {1..20}; do
+        if hf upload --repo-type space --private $LM_EVAL_REPO_ID $filepath $OUTPUT_DIR/$filename; then
+            echo "Upload succeeded for $filepath"
+            break
+        else
+            # Exponential backoff with max delay of 60 seconds
+            delay=$((2 ** (attempt - 1)))
+            if [ $delay -gt 60 ]; then
+                delay=60
+            fi
+            echo "Upload failed for $filepath. Attempt $attempt of 20. Retrying in $delay seconds..."
+            sleep $delay
+        fi
+    done
+done
 
-# # TODO: parse outputs into LightEval format
-# echo "Uploading details to Hugging Face Hub..."
-# hf upload --revision $MODEL_REVISION.$TASK_NAME.$TIMESTAMP --repo-type dataset --private $DETAILS_REPO_ID $OUTPUT_DIR/simulations/ data/
-
-# echo "Cleaning up ..."
-# rm -rf $OUTPUT_DIR
+echo "Cleaning up ..."
+rm -rf $OUTPUT_DIR
 
 # Calculate and display total runtime
 SCRIPT_END_TIME=$(date +%s)

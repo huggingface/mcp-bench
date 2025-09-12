@@ -231,7 +231,7 @@ def main():
             if overall_weighted_scores is not None:
                 output_data['overall_weighted_average'] = overall_weighted_scores
             
-            output_file = os.path.join(directory, 'results.json')
+            output_file = os.path.join(directory, 'results_aggregated.json')
             try:
                 with open(output_file, 'w') as f:
                     json.dump(output_data, f, indent=2)
@@ -359,7 +359,7 @@ def main():
                 if overall_weighted_scores is not None:
                     output_data['overall_weighted_average'] = overall_weighted_scores
                 
-                output_file = os.path.join(directory, 'results.json')
+                output_file = os.path.join(directory, 'results_aggregated.json')
                 try:
                     with open(output_file, 'w') as f:
                         json.dump(output_data, f, indent=2)
