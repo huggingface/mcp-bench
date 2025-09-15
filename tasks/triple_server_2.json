@@ -1,0 +1,187 @@
+{
+  "generation_info": {
+    "status": "completed"
+  },
+  "server_tasks": [
+    {
+      "server_name": "Medical Calculator+Wikipedia+FruityVice",
+      "tasks": [
+        {
+          "task_id": "medical_calculator_wikipedia_fruityvice_000",
+          "task_description": "You are preparing a comprehensive pre-operative and cardiovascular risk assessment and management plan for a 65-year-old female patient scheduled for elective hip replacement. All data are provided below. Execute the following sequence: 1) Calculate BMI and BSA for weight 85 kg and height 165 cm. 2) Calculate IBW and ABW for actual weight 85 kg and height 65 inches (female). 3) Compute Cockcroft-Gault creatinine clearance using age 65, weight 85 kg, height 65 inches, serum creatinine 1.2 mg/dL, female. 4) Compute eGFR using CKD-EPI creatinine-cystatin C (scr 1.2 mg/dL, scys 1.3 mg/L, age 65, female) and also eGFR using CKD-EPI creatinine only (scr 1.2, age 65, female). 5) Compare the two eGFR values—if they differ by more than 5 mL/min/1.73 m², select the lower eGFR for drug-dosing decisions. 6) Calculate corrected serum sodium for measured sodium 130 mEq/L and serum glucose 280 mg/dL. 7) Calculate corrected serum calcium for measured calcium 8.2 mg/dL and albumin 2.8 g/dL (normal albumin 4.0 g/dL). 8) Compute Child-Pugh score with bilirubin 2.0 mg/dL, albumin 2.8 g/dL, INR 1.5, ascites “slight,” encephalopathy grade 1. 9) Compute MELD-3.0 score with age 65, female true, bilirubin 2.0, INR 1.5, creatinine 1.2, albumin 2.8, sodium 132 mEq/L, dialysis false. 10) Calculate HOMA-IR using fasting insulin 18 uIU/mL and fasting glucose 150 mg/dL. 11) Compute Framingham 10-year CHD risk with age 65, total cholesterol 220 mg/dL, HDL 50 mg/dL, systolic BP 145 mmHg, treated for BP true, smoker true, gender “female.” 12) Compute PREVENT 10-year CVD risk with age 65, female true, tc 220 mmol/L, hdl 50 mmol/L, sbp 145 mmHg, diabetes true, current_smoker true, egfr (from step 5), using_antihtn true, using_statins false. 13) Compare Framingham vs PREVENT risks; if PREVENT exceeds Framingham by >2%, search Wikipedia for “differences between Framingham and PREVENT cardiovascular risk models,” get the top-3 summary points. 14) Compute CHA₂DS₂-VASc score with age 65, female true, CHF false, hypertension true, stroke_history false, vascular_disease true, diabetes true. 15) Compute Revised Cardiac Risk Index with high_risk_surgery true, ischemic_heart_disease false, congestive_heart_failure false, cerebrovascular_disease false, insulin_treatment true, creatinine_over_2mg false. 16) Compute Wells PE score with clinical_signs_dvt false, alternative_diagnosis_less_likely true, heart_rate_over_100 false, immobilization_or_surgery true, previous_dvt_or_pe false, hemoptysis false, malignancy false. 17) Calculate QTc by Bazett formula with QT interval 400 ms and heart rate 78 bpm. 18) Calculate total daily MME for oxycodone 10 mg per dose, 4 doses per day. 19) Convert prednisone 20 mg to dexamethasone equivalent. 20) If PREVENT risk >20%, search Wikipedia for “high-intensity statin therapy recommendations,” retrieve article summary, and extract the top-5 key recommendations. Summarize all results with interpretation notes for surgical clearance and perioperative medication planning.",
+          "fuzzy_description": "Hey, I’m working on getting pre-op clearance for a 65-year-old woman who’s due for an elective hip replacement, and I’m a bit swamped trying to tie together all her numbers and risk scores so I can make the right calls on meds and timing. She’s 85 kg and about 165 cm tall (roughly 65 inches), so I want to know her BMI, BSA and what her ideal versus adjusted body weight would be. Her serum creatinine is 1.2 mg/dL and cystatin C is 1.3 mg/L—could you run Cockcroft-Gault and CKD-EPI both with and without cystatin C and let me know if they differ by more than 5 mL/min/1.73 m² (and if so, which value I should use for dosing)? She’s also got sodium of 130 mEq/L with glucose 280 mg/dL, plus calcium 8.2 mg/dL and albumin 2.8 g/dL (normal albumin 4.0), so I need corrected sodium and calcium, too. On the liver side she has bilirubin 2.0 mg/dL, albumin 2.8 g/dL, INR 1.5, slight ascites and grade 1 encephalopathy—what’s her Child-Pugh and MELD-3.0 (sodium 132 mEq/L, not on dialysis)? Metabolically, her fasting insulin is 18 µIU/mL and glucose 150 mg/dL—can you get her HOMA-IR? For cardiovascular risk I’d like her 10-year Framingham score (age 65, TC 220 mg/dL, HDL 50 mg/dL, SBP 145 mmHg on treatment, smoker, female) and a PREVENT 10-year CVD risk using TC 220 mmol/L, HDL 50 mmol/L, SBP 145 mmHg, diabetic, current smoker, on antihypertensives, not on statins, plus whichever eGFR we decide. If PREVENT is more than 2% higher than Framingham, could you summarize the top three differences between those two models? While you’re at it, what are her CHA₂DS₂-VASc (she’s 65, female, hypertension, vascular disease, diabetes) and Revised Cardiac Risk Index (high-risk surgery, on insulin) scores, and a Wells score for PE given her upcoming surgery? I also need her QTc by Bazett’s formula (QT 400 ms, HR 78 bpm), total daily MME if she’s on oxycodone 10 mg four times a day, and a prednisone-to-dexamethasone equivalent for 20 mg of prednisone. Finally, if that PREVENT risk is above 20%, could you pull the top five high-intensity statin therapy recommendations from Wikipedia? I really need the actual numbers and a few brief interpretation notes so I can present solid, evidence-based planning to the team.",
+          "dependency_analysis": "1) Anthropometric chain: bmi_bsa_calculator→ibw_abw_calculator uses weight and height. 2) Renal function chain: crcl_cockcroft_gault and both egfr_epi_cr_cys & egfr_epi share scr, age, sex (and scys) inputs. Branch: compare two eGFR outputs, decision point selects lower for dosing. 3) Electrolyte corrections: corrected_sodium uses glucose from patient data and measured sodium; corrected_calcium uses albumin and calcium. 4) Hepatic function: child_pugh_score and meld_3 both consume bilirubin, albumin, inr plus specific fields; sequential but parallel. 5) Metabolic chain: homa_ir uses fasting insulin and glucose. 6) Cardiovascular risk chain: framingham_risk_score and prevent_cvd_risk both consume age, lipid, BP, sex, smoking, diabetes, and require egfr from step 5. Decision: compare two risk models; if discrepancy triggers Wikipedia search. 7) Cross-server: PREVENT output >2% above Framingham triggers Wikipedia:search_wikipedia→get_summary. Later, PREVENT risk >20% triggers further Wikipedia:search_wikipedia→get_summary→extract_key_facts. 8) Thromboembolism: chads2_vasc_score and wells_pe_criteria execute in parallel for AF stroke vs PE risk. 9) QT interval chain: qtc_calculator uses QT and HR. 10) Pain/sedation chain: calculate_mme for opioid dosing; steroid_conversion for steroid planning. 11) Sequential dependencies: outputs from steps 2–5 feed into step 12; step 12 and 11 feed into decision at step 13; step 13 and step 12 decisions direct cross-server workflows. 12) Critical decision points: eGFR comparison (>5 mL/min), risk model discrepancy (>2%), high-risk threshold (>20%). 13) Parallel vs sequential: most calculators run parallel after initial anthropometry; risk models must follow renal metrics. 14) Cross-server: Medical Calculator data (egfr, risks) controls Wikipedia queries and summaries for guideline retrieval.",
+          "distraction_servers": [
+            "BioMCP",
+            "DEX Paprika",
+            "Google Maps",
+            "Huge Icons",
+            "Metropolitan Museum",
+            "NASA Data",
+            "National Parks",
+            "OKX Exchange",
+            "Reddit",
+            "Scientific Computing"
+          ]
+        }
+      ],
+      "servers": [
+        "Medical Calculator",
+        "Wikipedia",
+        "FruityVice"
+      ],
+      "combination_name": "Health Advisor",
+      "combination_type": "three_server_combinations"
+    },
+    {
+      "server_name": "Medical Calculator+Wikipedia+FruityVice",
+      "tasks": [
+        {
+          "task_id": "medical_calculator_wikipedia_fruityvice_001",
+          "task_description": "You are evaluating a 68-year-old male patient for cardiovascular risk, renal function, and metabolic electrolyte corrections. All input data are provided below and no further information is needed. Perform the following steps in sequence:\n\n1. Calculate kidney function:\n   a. Use egfr_epi with scr=1.5 mg/dL, age=68, male=true.\n   b. Use egfr_epi_cr_cys with scr=1.5 mg/dL, scys=1.2 mg/L, age=68, male=true.\n   c. Compare the two eGFR values. If the CKD-EPI creatinine-cystatin C eGFR differs by more than 5 mL/min/1.73 m² from the creatinine-only eGFR, select the lower value; otherwise select the average.\n\n2. Calculate metabolic corrections in parallel:\n   a. Use corrected_sodium with measured_sodium=130 mEq/L and serum_glucose=300 mg/dL.\n   b. Use corrected_calcium with serum_calcium=8.0 mg/dL and patient_albumin=2.5 g/dL.\n\n3. Calculate cardiovascular risk scores:\n   a. Use prevent_cvd_risk with age=68, female=false, tc=5.5 mmol/L, hdl=1.0 mmol/L, sbp=140 mmHg, diabetes=false, current_smoker=false, egfr=<selected eGFR>, using_antihtn=true, using_statins=false.\n   b. Use framingham_risk_score with age=68, total_cholesterol=213 mg/dL, hdl_cholesterol=39 mg/dL, systolic_bp=140 mmHg, treated_for_bp=true, smoker=false, gender=\"male\".\n\n4. Evaluate atrial fibrillation stroke risk (conditional):\n   The patient has non-valvular atrial fibrillation. Use chads2_vasc_score with age=68, female=false, chf=false, hypertension=true, stroke_history=false, vascular_disease=false, diabetes=false.\n\n5. Decision points and cross-validation:\n   a. Compare the 10-year CVD risk from PREVENT and Framingham. If both exceed 20%, search Wikipedia for “Primary prevention statin guidelines 10-year cardiovascular risk” and get a summary of at least 150 words.\n   b. If CHA₂DS₂-VASc score ≥ 2, search Wikipedia for “CHA₂DS₂-VASc stroke prevention management” and retrieve a 150-word summary of guideline recommendations.\n\n6. Compile a final report in JSON format containing:\n   - egfr_epi_value (float)\n   - egfr_epi_cr_cys_value (float)\n   - selected_egfr (float)\n   - corrected_sodium (dict)\n   - corrected_calcium (dict)\n   - prevent_cvd_10yr_risk (dict)\n   - framingham_10yr_risk (float)\n   - chads2_vasc_score (int)\n   - statin_guidelines_summary (string, if triggered)\n   - af_stroke_prevention_summary (string, if triggered)\n\nThis task must be executed exactly as specified, using only the provided tools in the given order, and the output must follow the defined JSON schema without asking for further inputs.",
+          "fuzzy_description": "Hey, I’m working up a 68-year-old man and could use some help pulling together all his numbers and guideline info. He’s got a serum creatinine of 1.5 mg/dL and cystatin C of 1.2 mg/L, so I want to see his eGFR by both the creatinine-only and the creatinine-cystatin equations, then choose the lower one if they differ by more than 5 mL/min/1.73 m² (or average them if they’re close). His sodium is 130 mEq/L but his glucose is about 300 mg/dL, and his calcium is 8.0 mg/dL with albumin at 2.5 g/dL—so I need the corrected values for those. Next, I’d like two 10-year cardiovascular risk estimates: one using his total cholesterol 5.5 mmol/L (213 mg/dL), HDL 1.0 mmol/L (39 mg/dL), treated systolic BP 140 mmHg, no diabetes, non-smoker, on antihypertensives but not on statins, and our chosen eGFR; and the Framingham model with the same age, lipids, BP (treated), and smoking status. If both risks exceed 20%, I need about a 150-word summary of primary prevention statin guidelines. He also has non-valvular atrial fibrillation, so with his CHA₂DS₂-VASc factors (68 years, male, no CHF, yes hypertension, no prior stroke, no vascular disease, no diabetes) I need that score—and if it’s ≥ 2, a 150-word summary of stroke prevention management. Could you package everything into JSON—each eGFR, the selected eGFR, corrected sodium and calcium, the two risk outputs, the CHA₂DS₂-VASc score, and any guideline text that gets triggered? I really need the hard numbers and concise guideline excerpts to share with my team. Thanks!\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "Inherent tool chains:\n- egfr_epi and egfr_epi_cr_cys both compute eGFR; their outputs feed into prevent_cvd_risk as the ‘egfr’ parameter.\n- corrected_sodium and corrected_calcium are independent metabolic correction calculators that run in parallel.\n- prevent_cvd_risk and framingham_risk_score both produce 10-year cardiovascular risk estimates for cross-validation.\n- chads2_vasc_score is used conditionally when atrial fibrillation is present.\n- Wikipedia tools (search_wikipedia → get_summary) form a standard workflow: clinical results determine the query, then summary is fetched.\n\nScenario-based dependencies and decision points:\n- Step 1(c): branching logic selects which eGFR to pass forward based on the numeric difference.\n- Step 4: conditional execution of chads2_vasc_score only if AF is present.\n- Step 5(a): if both CVD risk tools exceed a 20% threshold, trigger a Wikipedia search for statin guidelines, else skip.\n- Step 5(b): if CHA₂DS₂-VASc score ≥ 2, trigger a separate Wikipedia search for stroke prevention guidelines.\n\nParallel vs sequential:\n- Kidney function calculators (egfr) run sequentially but branch logic determines the next action.\n- Electrolyte corrections run in parallel, independent of one another.\n- Risk calculators run in parallel once eGFR is selected.\n- Wikipedia calls occur sequentially after decision points.\n\nCross-server dependencies:\n- Medical Calculator outputs (egfr, risk scores) dictate the parameters and queries for Wikipedia searches.\n- Clinical thresholds from Medical Calculator trigger cross-server queries to Wikipedia for guideline summaries.\n\nThis complex, self-contained task cannot be completed without understanding how each calculator’s output feeds into the next step and triggers conditional searches in Wikipedia.",
+          "distraction_servers": [
+            "Bibliomantic",
+            "Car Price Evaluator",
+            "Game Trends",
+            "Google Maps",
+            "Math MCP",
+            "National Parks",
+            "NixOS",
+            "OSINT Intelligence",
+            "Scientific Computing",
+            "Unit Converter"
+          ]
+        }
+      ],
+      "servers": [
+        "Medical Calculator",
+        "Wikipedia",
+        "FruityVice"
+      ],
+      "combination_name": "Health Advisor",
+      "combination_type": "three_server_combinations"
+    },
+    {
+      "server_name": "NASA Data+Google Maps+Wikipedia",
+      "tasks": [
+        {
+          "task_id": "nasa_data_google_maps_wikipedia_000",
+          "task_description": "As a space weather analyst, identify all significant solar events in the past 7 days that had potential Earth impact and assess their effect on high-latitude research stations. Perform the following steps without human intervention:\n\n1. Call get_notifications with start_date \"7 days ago\", end_date \"today\", notification_type \"FLR\" to retrieve solar flare notifications.\n2. From the returned notifications, filter for solar flares of class M5 or higher.\n3. For each filtered flare event, call get_solar_flare with start_date and end_date equal to that event date to obtain detailed flux and peak time.\n4. For the same event date, call get_coronal_mass_ejection with start_date and end_date equal to that date; keep only CMEs where \"cme_type\" is \"Halo\".\n5. For each retained Halo CME, call get_geomagnetic_storm with start_date and end_date equal to the CME date; keep only storms with peak Kp-index ≥ 6.\n6. For each qualifying storm, call get_earth_imagery with lat 68.358, lon -133.721, date equal to the storm date, dim 0.025, and cloud_score true; record the returned cloud_score.\n7. Call maps_reverse_geocode with latitude 68.358 and longitude -133.721 to obtain a human-readable location.\n8. Call search_nearby with center.value set to \"68.358,-133.721\", isCoordinates true, keyword \"research station\", radius 50000 to find nearby research stations.\n9. For the top 2 results by rating, call get_place_details for each placeId to retrieve name, address, and rating.\n10. Call search_wikipedia with query \"Coronal mass ejection\" and limit 1; then call get_article with the returned title to retrieve the full content.\n\nCompile a final report in two parts:\nA) A table with columns: Event Date, Solar Flare Class, CME ID, Peak Kp-index, Cloud Score, Station Name, Station Address, Station Rating.\nB) A concise summary (max 200 words) of coronal mass ejections extracted from the retrieved Wikipedia article.",
+          "fuzzy_description": "I’m putting together a quick impact rundown for our Arctic monitoring outpost up around 68.4° N, 133.7° W and need to know if anything big has happened in the last week. Did any solar flares above roughly M5 erupt, and if so, were there full-halo ejections that sparked geomagnetic storms hitting a Kp of 6 or more? I’d also love to see what our satellite shots showed over that exact spot—basically a cloud-cover score for when those storms arrived. While you’re at it, can you tell me the human-readable name for that location, then find the nearest research stations within about 50 km, pick the top two by rating, and give me their names and addresses? Finally, could you wrap up with a short (around 200 words) background on coronal mass ejections from a reliable source? Really need the hard numbers and solid references here—my boss won’t accept vague takeaways. Thanks!\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "Key tool chains and data flow:\n• Sequential NASA Data pipeline: get_notifications → get_solar_flare → get_coronal_mass_ejection → get_geomagnetic_storm → get_earth_imagery. Each tool’s output (event dates, CME types, Kp-index, latitude/longitude, cloud_score) directly parameterizes the next call.\n• Cross-server linkage: NASA Data’s Earth imagery coordinates (68.358, -133.721) feed into Google Maps tools (maps_reverse_geocode → search_nearby → get_place_details).\n• Parallel background chain: Wikipedia tools (search_wikipedia → get_article) run independently at the end to provide contextual information.\n\nCritical decision points:\n1. Filter on solar flare class ≥ M5 determines whether to proceed from get_notifications to get_solar_flare.\n2. CME type = “Halo” determines whether to invoke get_geomagnetic_storm.\n3. Peak Kp-index ≥ 6 determines whether to fetch Earth imagery and perform Google Maps searches.\n4. Selection of the top 2 stations by rating after search_nearby.\n\nSequential vs. parallel:\n– NASA Data pipeline is strictly sequential, with each step depending on the prior step’s filtered results.\n– Google Maps calls are sequentially dependent on the NASA Data imagery coordinates.\n– Wikipedia chain is parallel and independent from the NASA Data → Google Maps flow, used only for summary context.\n\nCross-server dependencies:\n– NASA Data outputs (lat/lon) are used as inputs for Google Maps geocoding and nearby searches.\n– Wikipedia tools provide cross-validation and background, but do not feed back into the NASA Data pipeline.",
+          "distraction_servers": [
+            "Context7",
+            "DEX Paprika",
+            "Huge Icons",
+            "Math MCP",
+            "Medical Calculator",
+            "NixOS",
+            "OKX Exchange",
+            "Reddit",
+            "Scientific Computing",
+            "Unit Converter"
+          ]
+        }
+      ],
+      "servers": [
+        "NASA Data",
+        "Google Maps",
+        "Wikipedia"
+      ],
+      "combination_name": "Space Exploration",
+      "combination_type": "three_server_combinations"
+    },
+    {
+      "server_name": "NASA Data+Google Maps+Wikipedia",
+      "tasks": [
+        {
+          "task_id": "nasa_data_google_maps_wikipedia_001",
+          "task_description": "Generate a one-week astro-hazard and space-weather readiness report for New York City. 1) Fetch NASA’s Astronomy Picture of the Day for the current date. 2) Retrieve EPIC imagery dates and pick the latest date; then get all EPIC images (natural collection) for that date. 3) Get the near-Earth asteroid feed for the next 7 days. 4) From that feed, identify all asteroids with a close-approach miss_distance.kilometers under 500 000 km; for each, look up its detailed parameters (diameter and velocity). 5) Retrieve DONKI notifications, geomagnetic storms, solar flares, and coronal mass ejections for the past 7 days. 6) Cross-validate potential aurora-causing storms: search Wikipedia for “Aurora Borealis” and fetch the full article. 7) Geocode “New York City” to coordinates. 8) Search for “emergency shelter” within a 5 000 m radius of NYC center (openNow=true, minRating=3.0); if fewer than 5 shelters are found, repeat the search with a 10 000 m radius. 9) For the top 5 shelters, compute driving distances and durations from NYC center. 10) Fetch the most recent Landsat-8 Earth imagery for NYC coordinates (dim=0.05°). 11) Compile and return a JSON report containing: apod (title, url), epic_images (list of image urls), asteroid_hazards (id, approach_date, miss_distance_km, estimated_diameter_m, relative_velocity_kph), space_weather_summary (notifications list, storms list with type and date), aurora_wikipedia (article title and first 3 paragraphs), emergency_shelters (name, address, rating, distance_m, duration_min), and earth_imagery_url.",
+          "fuzzy_description": "Hey, I’ve got a bit of a weird ask—my team wants a one-week space-weather and astro-hazard rundown specifically for New York City, and I need to pull together a bunch of data to make it convincing.\n\nFirst, I’d love to feature NASA’s Astronomy Picture of the Day plus any new natural-color Earth photos they’ve released. Then, can you glance at the list of near-Earth asteroids coming by over the next seven days and flag any that swing within about 500,000 km? For those, I need their size estimates and how fast they’re moving.\n\nOn the solar side, what geomagnetic storms, solar flares, and CMEs have been reported in the past week? And do any of those look like they could spark an aurora this far south—maybe check Wikipedia’s Aurora Borealis entry to understand the conditions and grab the first few paragraphs for context.\n\nMeanwhile, I also need to map out emergency shelters around the city center—start with a 5 km radius for places open now with at least a 3-star rating; if there aren’t five, stretch it to 10 km—and get names, addresses, ratings, plus driving distances and times for the top five.\n\nLast piece: snag the most recent Landsat-8 image tile over NYC (roughly a 0.05° box) so we’ve got a current view of the ground. Can you package all of that into a clear, data-driven summary with real URLs, exact distances, dates, and other hard numbers? I really need solid evidence and sources—no guesstimates—because I’m presenting this to leadership next week.",
+          "dependency_analysis": "This task weaves multiple sequential and conditional tool chains across NASA Data, Wikipedia, and Google Maps: 1) EPIC chain: get_epic_dates → get_epic_imagery_by_date (use dates output to request imagery). 2) APOD is standalone. 3) NEO hazard chain: get_asteroids_feed → filter by miss_distance → for each candidate call get_asteroid_lookup. Decision point: only asteroids under 500 000 km proceed. 4) Space-weather chain: get_notifications, get_geomagnetic_storm, get_solar_flare, get_coronal_mass_ejection run in parallel for past 7 days. 5) Cross-validation: Wikipedia: search_wikipedia → get_article (validate storm-induced aurora context). 6) Geomapping chain: maps_geocode → search_nearby; conditional loop: if search_nearby returns fewer than 5 results at radius=5000m, re-invoke with radius=10000m → maps_distance_matrix for top 5 entries. 7) Earth observation: get_earth_imagery uses NYC coordinates. Data flows: NASA’s location-agnostic outputs feed into Google Maps only via the NYC geocode; Wikipedia inputs are driven by NASA’s space-weather results. Sequential dependencies ensure tools supply parameters for downstream calls; conditional repetition enforces iterative refinement; cross-server dependencies tie space-weather findings to public information (Wikipedia) and emergency planning (Google Maps).",
+          "distraction_servers": [
+            "Call for Papers",
+            "Context7",
+            "DEX Paprika",
+            "Huge Icons",
+            "National Parks",
+            "NixOS",
+            "OSINT Intelligence",
+            "OpenAPI Explorer",
+            "Reddit",
+            "Unit Converter"
+          ]
+        }
+      ],
+      "servers": [
+        "NASA Data",
+        "Google Maps",
+        "Wikipedia"
+      ],
+      "combination_name": "Space Exploration",
+      "combination_type": "three_server_combinations"
+    },
+    {
+      "server_name": "OpenAPI Explorer+Paper Search+Hugging Face",
+      "tasks": [
+        {
+          "task_id": "openapi_explorer_paper_search_hugging_face_000",
+          "task_description": "Analyze and compare the authentication and security schemes of the \"openai\" and \"github\" OpenAPI specifications. Use the following workflow:\n\n1. Call OpenAPI Explorer:getApiOverview with id=\"openai\" and id=\"github\" to extract each spec’s list of security schemes.\n2. Compare the two lists to identify which schemes (e.g., apiKey, OAuth2 flows, bearerAuth) appear in each spec and which are unique or missing.\n3. If the GitHub spec includes an OAuth2 flow that the OpenAI spec lacks, set query=\"OAuth2 security in REST APIs best practices\"; otherwise set query=\"API key security in REST APIs best practices\".\n4. Call Paper Search:search_arxiv with the chosen query and max_results=5. If fewer than 3 results are returned, call Paper Search:search_pubmed with the same query and max_results=5.\n5. From the first 3 papers returned by the primary source (arXiv, or PubMed if fallback), extract their titles and abstracts from the metadata.\n6. Independently, call Hugging Face:search-models with query=\"API security\" and limit=5 to find relevant ML models.\n7. For the top 2 model_ids returned, call Hugging Face:get-model-info to retrieve detailed model descriptions and capabilities.\n8. Compile a JSON report with three top-level sections:\n   • \"security_comparison\": list of security schemes present in OpenAI vs GitHub and identified gaps.\n   • \"academic_summary\": an array of objects {\"title\":…, \"abstract\":…} for the selected 3 papers.\n   • \"ml_models\": an array of the two models’ detailed info from Hugging Face:get-model-info.\n\nThe agent should execute this sequence without further input and output the final report in JSON.",
+          "fuzzy_description": "Hey, I’ve been working on a project that ties together an AI chat service API and a code-hosting API, and I’m kind of lost in all their auth setups. I see mentions of API keys, bearer tokens, OAuth flows, and I can’t quite tell which method each one really uses or where there might be gaps if I try to standardize our security layer. \n\nCould you look into both and give me a clear comparison of their auth schemes—what they share, what’s unique to each, and where one might offer OAuth2 that the other doesn’t (or vice versa)? \n\nThen, based on what you find, I’d like to dive into some academic best practices: if there’s an OAuth2 flow in the code-hosting API that the chat API lacks, point me to three recent papers on OAuth2 security; otherwise, send over three studies on API key security. I’d need the titles and abstracts so I can actually read up on them.\n\nFinally, I’m considering bolting on some ML-driven security checks—can you find a couple of machine-learning models focused on API security and give me a quick rundown of their capabilities? \n\nI really need solid evidence—real paper abstracts, model details, concrete info—because I’ll be presenting this to my boss. Does that make sense?",
+          "dependency_analysis": "1. Sequential dependency: Use OpenAPI Explorer:getApiOverview twice (for \"openai\" and \"github\") to produce two security-scheme lists. 2. Decision point: Compare the two lists; if GitHub includes OAuth2 and OpenAI does not, choose the OAuth2 query; otherwise choose the API key query. 3. Conditional workflow: Primary academic search via Paper Search:search_arxiv; if its result count <3, fallback to Paper Search:search_pubmed. 4. Data flow: The selected query string (from step 2) is passed to Paper Search tools. 5. Inherent dependency: search_arxiv (or search_pubmed) outputs paper metadata containing titles and abstracts ready for summarization—no additional tools needed to extract abstracts. 6. Parallel independent branch: Use Hugging Face:search-models with fixed query \"API security\"; its output provides model_ids for the next step. 7. Sequential dependency: For the top 2 model_ids, call Hugging Face:get-model-info. 8. Cross-server orchestration: Data from OpenAPI Explorer influences Paper Search queries; Paper Search outputs trigger or skip fallback logic; Hugging Face tools run in parallel and feed into the final aggregation. 9. Final aggregation: Combine outputs from all three servers into one structured JSON report.",
+          "distraction_servers": [
+            "Bibliomantic",
+            "Car Price Evaluator",
+            "Context7",
+            "FruityVice",
+            "Game Trends",
+            "Math MCP",
+            "Movie Recommender",
+            "Scientific Computing",
+            "Unit Converter",
+            "Weather Data"
+          ]
+        }
+      ],
+      "servers": [
+        "OpenAPI Explorer",
+        "Paper Search",
+        "Hugging Face"
+      ],
+      "combination_name": "API Research Platform",
+      "combination_type": "three_server_combinations"
+    },
+    {
+      "server_name": "OpenAPI Explorer+Paper Search+Hugging Face",
+      "tasks": [
+        {
+          "task_id": "openapi_explorer_paper_search_hugging_face_001",
+          "task_description": "Audit the OpenAPI specifications for both the “openai” and “github” APIs to identify validation errors and security‐scheme inconsistencies, then cross‐validate against published best practices. 1. Use OpenAPI Explorer:getApiOverview with id=\"openai\" to retrieve the overall structure of the OpenAI spec. 2. Immediately feed id=\"openai\" into swagger-validator to validate the spec and collect all errors/warnings. 3. For each validation error that references an operationId or route, call OpenAPI Explorer:getApiOperation with id=\"openai\" and the operationIdOrRoute from the error to extract full request and response schemas. 4. Repeat steps 1–3 for id=\"github\". 5. Use Paper Search:search_arxiv with query=\"OAuth2 API security best practices\" and max_results=3 to find recent academic guidance. 6. For each returned paper_id, call Paper Search:read_arxiv_paper with that paper_id to extract text content and summarize the top five OAuth2 security recommendations. 7. Use Hugging Face:search-collections with query=\"API specification best practices\" and limit=1 to locate a community‐curated guideline set. 8. Call Hugging Face:get-collection-info with the namespace and collection_id returned to extract formal recommendations on versioning, schema consistency, deprecation policies, and authentication schemes. 9. Aggregate validation errors from both specs, map missing or misconfigured security schemes (API key vs OAuth2) against the five arXiv guidelines and the Hugging Face collection recommendations. 10. Produce a JSON report with these fields: { \"spec_name\": [\"openai\",\"github\"], \"validation_errors\": {...}, \"operations_missing_oauth2\": [...], \"academic_guidelines_summary\": [...], \"community_recommendations\": {...}, \"mismatches\": [...], \"action_items\": [...] }. The agent should execute this end‐to‐end without requesting further input.",
+          "fuzzy_description": "I’m working on a project that ties together two external services—one for AI features and one for code hosting—and my boss wants a thorough health check on their published API docs. I’m not totally confident the schemas are error-free or that every endpoint is using the right kind of authentication (API key vs. OAuth2), and I’ve heard there are some new best practices floating around in both academic papers and community guides. \n\nCould you take a careful look at each service’s official API description, surface any validation glitches or security-scheme oddities—like endpoints that aren’t actually protected by OAuth when they should be—and then see how those issues line up with the latest OAuth2 recommendations from a handful of recent research papers plus a well-known community-maintained guideline? I’d love a concise breakdown of:\n\n- What errors or warnings you find in each spec\n- Which operations are missing or misconfiguring OAuth2\n- The top security recommendations from the academic side\n- The key dos and don’ts from the community guide\n- A clear set of action items for us to fix all the mismatches\n\nI really need concrete examples and sources—quotable snippets or direct references—so I can justify every point when I report back. Does that make sense?",
+          "dependency_analysis": "Inherent dependencies: getApiOverview → swagger-validator → conditional getApiOperation. The spec id flows into the validator, whose output errors reference operationIds that drive calls to getApiOperation. Parallel chains: one for “openai”, one for “github”. Paper Search chain: search_arxiv produces paper_ids → read_arxiv_paper consumes those IDs → yields guideline text. Hugging Face chain: search-collections produces namespace+collection_id → get-collection-info consumes them → yields community best practices. Cross‐server dependencies: the security‐scheme issues and validation errors from OpenAPI Explorer+swagger-validator are cross‐validated against arXiv guidelines (Paper Search) and Hugging Face community recommendations. Decision points: if swagger-validator returns errors, drill down with getApiOperation; collect all errors before moving to best‐practice extraction. The final report merges all findings and recommendations into one JSON output.",
+          "distraction_servers": [
+            "Car Price Evaluator",
+            "Medical Calculator",
+            "Movie Recommender",
+            "NASA Data",
+            "National Parks",
+            "OKX Exchange",
+            "OSINT Intelligence",
+            "Reddit",
+            "Scientific Computing",
+            "Wikipedia"
+          ]
+        }
+      ],
+      "servers": [
+        "OpenAPI Explorer",
+        "Paper Search",
+        "Hugging Face"
+      ],
+      "combination_name": "API Research Platform",
+      "combination_type": "three_server_combinations"
+    }
+  ]
+}

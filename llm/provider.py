@@ -17,7 +17,7 @@ import json_repair
 logger = logging.getLogger(__name__)
 
 MODELS_WITH_MAX_COMPLETION_TOKENS: Set[str] = {
-    "o1-preview", "o1-mini", "o4-mini", "o3-mini", "o3", 
+    "o1-preview", "o1-mini", "o4-mini", "o4-mini-2025-04-16", "o3-mini", "o3", 
     "gpt-4o", "gpt-4o-mini", "gpt-5"
 }
 
@@ -153,11 +153,9 @@ class LLMProvider:
         }
         
         # Handle different token parameter names
-        if self.provider_type == "azure":
-            if self.deployment_name in MODELS_WITH_MAX_COMPLETION_TOKENS:
-                params["max_completion_tokens"] = max_tokens
-            else:
-                params["max_tokens"] = max_tokens
+        # Check if model requires max_completion_tokens regardless of provider
+        if self.deployment_name in MODELS_WITH_MAX_COMPLETION_TOKENS:
+            params["max_completion_tokens"] = max_tokens
         else:
             params["max_tokens"] = max_tokens
         

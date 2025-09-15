@@ -1,0 +1,329 @@
+{
+  "generation_info": {
+    "status": "completed"
+  },
+  "server_tasks": [
+    {
+      "server_name": "Math MCP",
+      "tasks": [
+        {
+          "task_id": "math_mcp_000",
+          "task_description": "You are provided with quarterly yield data (in tons) from 10 farms for the past quarter: [120, 150, 150, 200, 180, 170, 160, 140, 130, 155]. Perform the following calculations using the Math MCP tools in sequence:\n\n1. Compute total yield using Math MCP:sum.\n2. Compute average yield using Math MCP:mean.\n3. Compute median yield using Math MCP:median.\n4. Compute mode yield using Math MCP:mode.\n5. Determine minimum yield using Math MCP:min.\n6. Determine maximum yield using Math MCP:max.\n7. Calculate yield range (max minus min) using Math MCP:subtract.\n8. Calculate total revenue by multiplying total yield by a fixed price of $30 per ton using Math MCP:multiply.\n9. Calculate total fixed cost by multiplying the number of farms (10) by a fixed cost of $2,000 per farm using Math MCP:multiply.\n10. Compute net profit by subtracting total fixed cost from total revenue using Math MCP:subtract.\n11. Compute profit margin ratio by dividing net profit by total revenue using Math MCP:division.\n12. Convert the profit margin ratio to a percentage by multiplying by 100 using Math MCP:multiply, then round to the nearest integer using Math MCP:round.\n13. Compute deviation between maximum yield and average yield using Math MCP:subtract. If this deviation exceeds 30 tons, compute an extra fertilizer budget by multiplying the deviation by $10 per ton using Math MCP:multiply and then rounding up with Math MCP:ceiling. If the deviation is 30 tons or less, set the extra fertilizer budget to $500 and round down to the nearest integer using Math MCP:floor.\n\nProvide a final report listing: total yield, average yield, median yield, mode yield, min yield, max yield, yield range, total revenue, total fixed cost, net profit, profit margin percentage, deviation, and final fertilizer budget.",
+          "fuzzy_description": "I’m pulling together a report on last quarter’s harvest from our 10 farms, and honestly I need some hard numbers. We recorded yields of 120, 150, 150, 200, 180, 170, 160, 140, 130, and 155 tons. \n\nHere’s what I’m trying to nail down:\n- What’s our total output, average yield per farm, the median and the most common harvest size, plus our lowest and highest yields and the overall spread?\n- Then, at $30 a ton, what does that translate to in revenue?\n- After covering $2,000 in fixed costs per farm (so 10 farms total), what’s left as net profit and what’s our profit margin when you express it as a percentage (rounded to the nearest whole number)?\n- Finally, I’m curious about the gap between our top-performing farm (200 tons) and the average yield—if that difference is more than 30 tons, I want to budget extra fertilizer at $10 per ton of that gap (and round up); if it’s 30 or less, I’ll stick with a $500 allowance (and round down).\n\nCould you crunch all those figures? I really need solid data—can’t go to my boss with just guesses. Thanks!\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "Key tool chains and data flow:\n- Parallel summary computations: Math MCP:sum → total yield; Math MCP:mean → average yield; Math MCP:median → median yield; Math MCP:mode → mode yield; Math MCP:min → minimum yield; Math MCP:max → maximum yield.\n- Sequential calculations:\n  • Range calculation: subtract(maximum yield, minimum yield) via Math MCP:subtract.\n  • Revenue: multiply(total yield, 30) via Math MCP:multiply.\n  • Fixed cost: multiply(10, 2000) via Math MCP:multiply.\n  • Net profit: subtract(revenue, total fixed cost) via Math MCP:subtract.\n  • Profit margin ratio: division(net profit, revenue) via Math MCP:division.\n  • Profit margin percentage: multiply(ratio, 100) via Math MCP:multiply → round via Math MCP:round.\n  • Deviation: subtract(maximum yield, average yield) via Math MCP:subtract.\n- Decision point:\n  • If deviation > 30, then budget = ceiling(multiply(deviation, 10)) via Math MCP:multiply and Math MCP:ceiling.\n  • Else budget = floor(500) via Math MCP:floor.\nCritical decision conditions and branching ensure tool B’s output (deviation) determines whether to invoke Math MCP:ceiling or directly use Math MCP:floor. No cross-server dependencies are required since all tools reside on the Math MCP server. This workflow cannot be completed without respecting the outlined tool dependency chain.",
+          "distraction_servers": [
+            "Bibliomantic",
+            "BioMCP",
+            "Car Price Evaluator",
+            "Context7",
+            "DEX Paprika",
+            "Google Maps",
+            "Huge Icons",
+            "Hugging Face",
+            "Movie Recommender",
+            "Paper Search"
+          ]
+        },
+        {
+          "task_id": "math_mcp_001",
+          "task_description": "You are given the monthly sales figures (number of units sold) for a product over the past 6 months: [120, 150, 130, 170, 150, 160]. Perform the following analyses in sequence using the Math MCP tools:\n\n1. Compute the total sales for these 6 months.  (Math MCP:sum)\n2. Calculate the arithmetic mean of the 6 monthly figures.  (Math MCP:mean)\n3. Find the median sales value.  (Math MCP:median)\n4. Determine the mode (most frequent sales value).  (Math MCP:mode)\n5. Identify the maximum and minimum sales values.  (Math MCP:max and Math MCP:min)\n6. Compute the ratio of the highest month to the lowest month (max divided by min).  (Math MCP:division)\n7. Calculate the skewness of the distribution as (mean minus median).  (Math MCP:subtract)\n8. If the skewness is positive, round it up using ceiling; if skewness is zero or negative, round its absolute value down using floor.  (Math MCP:ceiling or Math MCP:floor)\n9. Assume the business wants an average of 180 units per month over the upcoming 7 months. Compute the total units required to meet this target.  (Math MCP:multiply)\n10. Determine how many additional units are needed next month by subtracting the already achieved total sales (from step 1) from the 7-month target total.  (Math MCP:subtract)\n11. Round the additional units needed next month to the nearest integer.  (Math MCP:round)\n\nFinally, present an executive summary in JSON format containing these fields: total_sales, average_sales, median_sales, mode_sales, max_sales, min_sales, max_to_min_ratio, skewness, adjusted_skewness, target_total_7_months, additional_needed_next_month_exact, additional_needed_next_month_rounded.",
+          "fuzzy_description": "Hey, I’ve been digging into my sales over the last six months—120, 150, 130, 170, 150 and 160 units—and I’m honestly a bit lost on how to pull it all together for my boss. Could you help me figure out where I stand overall (like total sales, average, median, and which month number appeared most often), spot the best and worst months, and even see how the top month compares to the bottom as a ratio? \n\nAlso, I heard it’s useful to look at how skewed things are by subtracting the median from the mean, and then rounding that skewness differently depending on whether it’s positive or not. On top of that, we’re aiming for an average of 180 units over the next seven months—so I need to know the total target for those seven months and exactly how many extra units I’d have to push next month to hit it (rounded to a whole number). \n\nCould you put all of that into a clean JSON summary (with fields like total_sales, average_sales, median_sales, mode_sales, max_sales, min_sales, max_to_min_ratio, skewness, adjusted_skewness, target_total_7_months, additional_needed_next_month_exact, additional_needed_next_month_rounded)? I really need real numbers for every piece so I can back it up properly—no guesses, just solid calculations.\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "Key tool chains and data flow:\n- Sequential chain: sum → mean → median → subtract → conditional round → multiply → subtract → round.\n- Parallel chain: max and min are computed in parallel on the original list, then fed into division for the max_to_min_ratio.\n\nCritical decision point:\n- After computing skewness = mean – median, choose Math MCP:ceiling if skewness > 0, otherwise take its absolute value and use Math MCP:floor. This conditional branch determines which rounding tool to call.\n\nIntermediate dependencies:\n- sum output feeds into the subtraction for additional_needed_next_month and also informs the summary.\n- mean and median outputs feed into the skewness calculation.\n- max and min outputs feed into the division for ratio.\n- The result of the conditional rounding (adjusted_skewness) is used only in the summary.\n- The 7-month target total (from multiply) and the historical sum (from sum) feed into the second subtraction.\n- The exact additional next month value from subtraction then goes into the final round step.\n\nParallel vs. sequential:\n- max and min run in parallel then combine via division. All other steps form a primarily linear workflow.\n\nCross-server dependencies:\n- Only the Math MCP server is used, so no cross-server dependencies are required.\n\nThis structure ensures the task cannot be solved without establishing the correct order of tool calls, handling conditional logic for rounding, and combining parallel streams (max/min) before further calculation.",
+          "distraction_servers": [
+            "Bibliomantic",
+            "Call for Papers",
+            "DEX Paprika",
+            "FruityVice",
+            "Metropolitan Museum",
+            "OKX Exchange",
+            "OSINT Intelligence",
+            "Paper Search",
+            "Unit Converter",
+            "Weather Data"
+          ]
+        }
+      ],
+      "servers": [
+        "Math MCP"
+      ],
+      "combination_name": "Single Server: Math MCP",
+      "combination_type": "single_server"
+    },
+    {
+      "server_name": "NixOS",
+      "tasks": [
+        {
+          "task_id": "nixos_000",
+          "task_description": "Assess the viability of deploying “neovim” on NixOS stable channel with reproducible builds, Home Manager configuration, nix-darwin support, and community flakes. The agent must:\n\n1. List all available NixOS channels.\n2. Search the stable NixOS channel for “neovim” in the packages category.\n3. Fetch detailed info about the “neovim” package from the stable channel.\n4. Retrieve NixOS statistics for the stable channel.\n5. Attempt to find the specific version “0.9.2” of “neovim” in NixHub. If not found, fall back to retrieving the latest 5 versions of “neovim” from NixHub.\n6. Search the NixOS flakes index for “neovim” and retrieve flake statistics.\n7. Search Home Manager options for “programs.neovim”. If found:\n   a. Get detailed info on the exact Home Manager option.\n   b. List all Home Manager options under the “programs.neovim” prefix.\n8. Retrieve overall Home Manager statistics.\n9. Search nix-darwin configuration options for “neovim”. If found:\n   a. Get detailed info on the exact nix-darwin option.\n   b. List all nix-darwin options under the prefix that includes “neovim”.\n10. Retrieve overall nix-darwin statistics.\n\nProduce a consolidated report that includes:\n- NixOS channel availability and package details.\n- Channel package/option counts.\n- Version reproducibility data from NixHub (commit hashes or fallback list).\n- Number and metadata of community flakes providing “neovim”.\n- Home Manager support depth (option details, sub-options, overall stats).\n- nix-darwin support (option details, sub-options, overall stats).",
+          "fuzzy_description": "I’ve been wrestling with setting up Neovim in a truly rock-solid NixOS environment and could really use a clear snapshot of where things stand. Here’s the deal: I’m on the stable NixOS channel, but I’m not even sure which channels are still alive or where Neovim lives in each. I’d love to know if the specific 0.9.2 release is packaged there—if it isn’t, what are the last few Neovim versions I could grab reproducibly? On top of that, I’m dabbling with flakes and want to see how many community flakes actually offer Neovim and what the download stats look like. Then there’s Home Manager and nix-darwin—does “programs.neovim” show up in their option trees, what does its entry look like, and how deep does the support go? Basically, I need hard numbers and real metadata—channel names, package counts, version hashes or fallback lists, flake counts, option paths, anything that proves this is actually supported end to end. I can’t go forward on gut feelings alone, so whatever you find, make sure it’s backed up by concrete data.",
+          "dependency_analysis": "Inherent and scenario-based dependencies:\n\n1. NixOS channel enumeration drives channel choice for subsequent package queries (nixos_channels → nixos_search).\n2. The package name output from nixos_search (“neovim”) becomes the input for nixos_info, nixhub_find_version/nixhub_package_versions, and nixos_flakes_search.\n3. nixos_info confirms exact package attributes before version queries. nixos_stats uses the same channel to report overall counts.\n4. nixhub_find_version depends on package_name and version; on failure, fallback to nixhub_package_versions (iterative loop decision).\n5. nixos_flakes_search runs in parallel to NixHub queries but uses the same package_name. nixos_flakes_stats runs independently to give context.\n6. Home Manager domain: home_manager_search uses the package_name prefix “programs.neovim”; if results exist, home_manager_info and home_manager_options_by_prefix form a chain to explore exact option and its sub-options; home_manager_stats provides overall metrics.\n7. nix-darwin domain: darwin_search for “neovim” drives darwin_info and darwin_options_by_prefix; darwin_stats provides overall context.\n8. Critical decision points:\n   - If nixhub_find_version fails, trigger fallback tool nixhub_package_versions.\n   - If home_manager_search or darwin_search yield zero matches, skip their info/prefix steps but still collect their global stats.\n9. Cross-validation:\n   - Compare package version from nixos_info with commit hashes from nixhub.\n   - Contrast community flakes count and metadata (nixos_flakes_search) against official stats (nixos_flakes_stats).\n10. Parallel vs sequential:\n   - Initial channel list → sequential package search/info → parallel queries: NixHub (version), flakes search, Home Manager search (and nested info), nix-darwin search (and nested info) → final global stats in each domain.\n11. All data flows remain within provided tools; no external APIs or files are required.",
+          "distraction_servers": [
+            "Car Price Evaluator",
+            "Context7",
+            "FruityVice",
+            "Game Trends",
+            "Google Maps",
+            "Huge Icons",
+            "Movie Recommender",
+            "National Parks",
+            "OSINT Intelligence",
+            "Scientific Computing"
+          ]
+        },
+        {
+          "task_id": "nixos_001",
+          "task_description": "You are a DevOps engineer tasked with designing a fully reproducible, cross-platform Python 3.10 data-analysis environment that works on both NixOS (using flakes on the unstable channel) and macOS (using nix-darwin). Your deliverables:\n1) Identify the exact NixOS package name for Python 3.10 on channel “unstable.”\n2) Retrieve its detailed package info.\n3) Obtain its version history and find the exact commit hash for version 3.10.8.\n4) Search the Nix flakes index for a community flake that provides Python 3.10.8 or later, and select the best candidate.\n5) From Home Manager, discover and configure the option group that manages Python packages and Jupyter Notebook integration.\n6) From nix-darwin, discover and configure the parallel option group to enable the same Python/Jupyter support on macOS.\n7) Produce a final flake.nix snippet that pins the chosen Python 3.10.8 commit hash, imports the selected flake, and sets up home-manager and darwin modules with the discovered options.\nYour output must include:\n  • The NixOS package name and details.\n  • The commit hash for Python 3.10.8.\n  • The name and metadata of the chosen flake.\n  • The Home Manager option path and configuration block for Python and Jupyter.\n  • The nix-darwin option path and configuration block for Python and Jupyter.\n  • The complete flake.nix snippet.\nAll steps are mandatory and must be executed in sequence without skipping.\n",
+          "fuzzy_description": "I’ve been banging my head against getting a rock-solid Python 3.10 setup that works exactly the same on NixOS (with flakes on unstable) and on my Mac via nix-darwin. What I really need is to pin down the precise Python 3.10 package from unstable—ideally lock in version 3.10.8 by its commit hash—then find out if there’s a community flake out there bundling that (or a later) release and pick the best one. On top of that, I want to wire it up in home-manager and nix-darwin so Jupyter and all my usual Python packages just land in my user environment without me juggling things by hand.\n\nCould you help me track down:\n\n• The exact NixOS package name for Python 3.10 on the unstable channel and its full package metadata?  \n• The version history so I can grab the commit hash for 3.10.8?  \n• A good community flake that already includes Python 3.10.8 or above (with name and any relevant metadata)?  \n• The right option path and example config block in home-manager to enable Python packages plus Jupyter Notebook?  \n• The parallel option group and config snippet for nix-darwin to get the same Python/Jupyter support on macOS?  \n• Finally, a complete flake.nix snippet that pins that exact commit, imports the chosen flake, and sets up both home-manager and darwin modules with those options?\n\nI really need the actual values—package names, commit hashes, option names/paths, config blocks, etc.—so I can hand this over to my team and prove it’s rock solid. Thanks!",
+          "dependency_analysis": "Key tool chains and data flow:\n1) Sequential search → info → version lookup: Use nixos_search to find the precise package name for “python3.10” on channel “unstable,” then feed that name into nixos_info to get detailed metadata.\n2) Version history lookup: Pipe the exact package name into nixhub_package_versions (limit 20) to list available versions, then use nixhub_find_version to zero in on version “3.10.8,” obtaining its commit hash.\n3) Flake discovery: Use nixos_flakes_search with query “python3.10” and limit 20 to identify community flakes that bundle Python. Select the best candidate based on metadata and version support.\n4) Parallel cross-server module discovery:\n   - With the chosen Python package context, run home_manager_search for ‘python’ and ‘jupyter’, then home_manager_options_by_prefix for the returned option category (e.g., “programs.jupyter”), concluding with home_manager_info to fetch exact option schema.\n   - In parallel, perform darwin_search for ‘python’ and ‘jupyter’, then darwin_options_by_prefix (e.g., “programs.jupyter”), culminating with darwin_info for exact nix-darwin option definitions.\n5) Data transformation & cross-validation: Confirm that the Home Manager and nix-darwin options align semantically (same option names or descriptions) and that the flake selected supports both modules.\n6) Output assembly: Synthesize all gathered data—package name, commit hash, flake identity, HM and darwin option blocks—into a single flake.nix snippet that pins the Python commit, imports the flake, and configures both home-manager and darwin modules.\nCritical decision points:\n• If nixhub_find_version cannot find 3.10.8, iterate with higher limits or select next-latest patch version.\n• If no flake packages Python 3.10.8, fall back to selecting one that supports Python >=3.10.6 and validate compatibility.\n• Ensure Home Manager and nix-darwin modules refer to the same underlying Python package name or flake output.\nCross-server dependencies:\n• The package name from NixOS tools flows into NixHub and flakes tools.\n• Flake metadata determines which modules to search for in Home Manager and nix-darwin.\n• Parallel HM and darwin discoveries must be reconciled to produce a unified flake configuration.\nThis task cannot be completed without respecting the natural input→output relationships among the NixOS, NixHub, Home Manager, nix-darwin, and flakes tools, as well as handling conditional fallbacks and parallel workflows for cross-platform consistency.",
+          "distraction_servers": [
+            "DEX Paprika",
+            "Game Trends",
+            "Hugging Face",
+            "Metropolitan Museum",
+            "Movie Recommender",
+            "OKX Exchange",
+            "OpenAPI Explorer",
+            "Reddit",
+            "Scientific Computing",
+            "Wikipedia"
+          ]
+        }
+      ],
+      "servers": [
+        "NixOS"
+      ],
+      "combination_name": "Single Server: NixOS",
+      "combination_type": "single_server"
+    },
+    {
+      "server_name": "OSINT Intelligence",
+      "tasks": [
+        {
+          "task_id": "osint_intelligence_000",
+          "task_description": "You are tasked with building a comprehensive threat profile for the domain example-inc.com. Perform the following steps without human intervention:\n1. Run a DNSTwist analysis on example-inc.com to generate all typographical variants.\n2. If DNSTwist returns more than five variants, pick the five highest-risk variants by edit distance. Otherwise, use them all.\n3. For example-inc.com and for each selected variant:\n   a. Perform a DNSRecon lookup to enumerate subdomains and NS/MX records.\n   b. Perform a Dig lookup to retrieve A, AAAA, and CNAME records.\n   c. Cross-validate the records from DNSRecon and Dig; flag any record present in one but missing in the other.\n   d. For each hostname discovered, perform a Host lookup to resolve to IP addresses. Consolidate unique IPs.\n   e. For each unique IP:\n      i. Run Nmap scan targeting ports 22, 80, and 443.\n      ii. If port 22 is open, note potential SSH exposure; if ports 80/443 are open, note HTTP/S service.\n      iii. Perform a Whois lookup on the IP to retrieve the network owner and geolocation.\n   f. Perform a Whois lookup on the domain itself (example-inc.com or variant) to retrieve registrar and registration dates.\n4. After processing all domains and IPs:\n   a. Identify any variant domain whose IP ranges overlap with example-inc.com’s IP space; tag as “sibling domain.”\n   b. Compare registrar from domain Whois with network owner from IP Whois; flag discrepancies.\n   c. Summarize all open-port findings and registrar/network mismatches in a JSON report.\n\nExpected output format:\n{\n  \"domain_profile\": [\n    {\n      \"domain\": \"example-inc.com\",          // or variant\n      \"whois_registrar\": \"...\",\n      \"variant_tag\": \"primary|typo-squat\",\n      \"subdomains_count\":  ...,\n      \"dns_record_discrepancies\": [...],\n      \"hosts\": [\n        {\n          \"hostname\": \"api.example-inc.com\",\n          \"ip\": \"203.0.113.45\",\n          \"nmap_open_ports\": [22, 443],\n          \"ip_whois_owner\": \"Example Hosting LLC\",\n          \"ssh_exposure\": true\n        },\n        ...\n      ]\n    }\n  ],\n  \"sibling_domains\": [...],\n  \"registrar_network_mismatches\": [...]\n}\n",
+          "fuzzy_description": "I’ve got a bit of a situation with the domain example-inc.com. My boss wants a full picture of any look-alike sites, subdomains and exposed services so we can see if someone’s squatting on typos or even hosting malicious stuff on the same network. I’m not even sure how many variants there might be if you fuzz it a bit, and I don’t want to miss a single suspicious spelling error or clone that ends up pointing back to our own servers. \n\nCould you help me track down all the possible typo-style domains that resemble example-inc.com, figure out which ones pose the biggest risk, and then map out what subdomains they’ve got? I also need to know every IP they resolve to, what ports are open (especially SSH or web ports), and who technically “owns” each IP and domain from a registration standpoint. And if any of those look-alikes share IP ranges with the real example-inc.com, flag that as a potential “sibling” setup. \n\nAt the end, I really need solid numbers or output—like actual DNS/DNS record details, open-port findings, and registrar versus network-owner info—so I can show my team real evidence. Does that make sense?",
+          "dependency_analysis": "• Core chain: DNSTwist → DNSRecon → Dig → Host lookup → Nmap + Whois\n• 1) DNSTwist produces domain variants; output controls which domains iterate through the rest of the chain. More than five variants triggers a selection branch.\n• 2) DNSRecon and Dig run in parallel per domain to fetch overlapping DNS data; outputs are cross-validated to detect missing records.\n• 3) Host lookup consumes hostnames from DNSRecon/Dig to produce IPs; unique IPs feed into both Nmap scan and Whois lookup on IP.\n• 4) Whois lookup on domain runs after branch decision on variants; also runs on IPs for cross-validation of network owner vs domain registrar.\n• 5) Nmap scan on each IP yields open ports; port 22 open triggers an “SSH exposure” flag, ports 80/443 trigger HTTP/S service notes.\n• Decision points:\n   – If DNSTwist yields >5 variants, pick top 5 by edit distance.\n   – After IP resolution, if an IP falls into the same /24 network as example-inc.com’s primary IP, tag the variant as “sibling domain.”\n   – If registrar (domain Whois) ≠ network owner (IP Whois), flag a mismatch.\n• Iterative loop: for each selected variant → steps a–f.\n• Cross-validation: compare DNSRecon vs Dig outputs; compare domain vs IP Whois data.\n• Sequential & parallel mix: DNSRecon and Dig run simultaneously per domain; the rest follow sequentially.\n• No external resources; uses only the provided tools and the concrete domain example-inc.com.",
+          "distraction_servers": [
+            "Bibliomantic",
+            "Car Price Evaluator",
+            "Context7",
+            "DEX Paprika",
+            "FruityVice",
+            "Game Trends",
+            "Hugging Face",
+            "National Parks",
+            "Scientific Computing",
+            "Wikipedia"
+          ]
+        },
+        {
+          "task_id": "osint_intelligence_001",
+          "task_description": "You are a security analyst investigating a recently registered domain fakeshoponline.com that has appeared in potential phishing reports over the past 3 months. Your objective is to map its DNS and hosting infrastructure, enumerate subdomains, discover typosquatting variants, scan for active services, and cross-validate ownership data to classify high-risk hosts and variants. Execute the following steps in order:\n\n1. Run dig_lookup with target=\"fakeshoponline.com\" to retrieve A, MX, NS, and TXT records.  \n2. Parse the NS records from step 1. Then run dnsrecon_lookup with target=\"fakeshoponline.com\" to enumerate subdomains over the past 3 months.  \n3. For each subdomain discovered in step 2, run host_lookup to resolve it to one or more IP addresses.  \n4. For each unique IP from step 3, run nmap_scan to identify open ports and services.  \n   • If port 25 is open on any IP, flag that host as an email relay candidate.  \n   • If ports 80 or 443 are open, flag that host as a web server candidate.  \n5. Run whois_lookup with target=\"fakeshoponline.com\" to retrieve the registrant organization and email.  \n6. Run dnstwist_lookup with domain=\"fakeshoponline.com\" to generate typosquatting and homoglyph variants.  \n7. Filter dnstwist results to keep only variants with Levenshtein distance ≤ 2. For each variant:\n   a. Run host_lookup to resolve the variant to IP(s).  \n   b. If the variant resolves, run nmap_scan on its IP(s).  \n   c. Run whois_lookup on the variant domain.  \n   d. Compare the variant’s registrant organization/email to the original domain’s registrant from step 5:\n      – If both match exactly, mark the variant as “likely related”.  \n      – If they differ, mark the variant as “likely unrelated.”  \n8. Produce a structured report in JSON with these sections:\n   • dns_records: output from step 1  \n   • subdomain_list: names from step 2  \n   • host_resolutions: mapping of each subdomain/variant to IP(s)  \n   • nmap_results: list of hosts with open ports and flagged roles  \n   • original_registrant: whois data from step 5  \n   • typosquat_variants: list of variants with resolution status, whois match status, and risk classification  \n   • risk_summary: classify each host/variant as High (resolves + whois match + port 80/443/25 open), Medium (resolves + only one indicator), or Low (no resolve or no indicators).",
+          "fuzzy_description": "Hey, I’ve got this sketchy domain, fakeshoponline.com, that only popped up roughly three months ago and now keeps showing up in phishing reports. I’m trying to piece together who’s really behind it—what their name servers and mail servers look like, any subdomains they’ve spun up recently, and where all those endpoints actually live. On top of that, I’m worried about look-alike tricks—domains with just a letter or two changed—that might resolve to the same IP space and even run a web server or open mail relay. Can you help me trace all of that back to the registrant’s info so I can see which ones share the same owner and which are red herrings? I really need everything backed by concrete DNS records, IP mappings, port/service checks, and ownership details—so I can show my team hard evidence, not just theories.",
+          "dependency_analysis": "Key tool chains and data flow:\n- Sequential workflow: dig_lookup → dnsrecon_lookup → host_lookup → nmap_scan for the original domain’s subdomains.\n- Parallel & iterative loops: For each subdomain and each typosquat variant, perform host_lookup then nmap_scan (two nested loops).\n- Cross-validation: whois_lookup on both the original domain and on each variant, comparing registrant email and organization to classify variants.\n- Decision points:\n  • After nmap_scan, check for ports 25, 80, 443 to flag email relay or web server roles.\n  • After dnstwist_lookup, filter variants by Levenshtein distance ≤ 2.\n  • After whois on variants, match registrant fields to decide “likely related” vs “likely unrelated.”\n- Data transformation:\n  • Parse NS records from dig_lookup to guide dnsrecon_lookup scope.\n  • Extract IP addresses from host_lookup output to feed into nmap_scan.\n  • Filter and transform dnstwist results by edit distance before resolution.\n- Cross-server dependencies: All tools are on the same OSINT Intelligence server, so there are no external server calls, but multiple tool categories (DNS, port scan, registry) are combined to achieve the end-to-end analysis.",
+          "distraction_servers": [
+            "Call for Papers",
+            "Context7",
+            "Game Trends",
+            "Google Maps",
+            "Metropolitan Museum",
+            "Movie Recommender",
+            "OKX Exchange",
+            "Scientific Computing",
+            "Weather Data",
+            "Wikipedia"
+          ]
+        }
+      ],
+      "servers": [
+        "OSINT Intelligence"
+      ],
+      "combination_name": "Single Server: OSINT Intelligence",
+      "combination_type": "single_server"
+    },
+    {
+      "server_name": "Reddit",
+      "tasks": [
+        {
+          "task_id": "reddit_000",
+          "task_description": "Your team needs to compare community engagement and discussion depth on AI research topics in r/MachineLearning and r/artificial over the past week. Execute the following steps using the provided Reddit tools without any external calls:\n\n1. In parallel, call Reddit:fetch_reddit_hot_threads for subreddit=\"MachineLearning\" and subreddit=\"artificial\", each with limit=10.  \n2. Parse each tool’s output to extract the post_id and initial comment count for every thread returned.  \n3. For each post_id, call Reddit:fetch_reddit_post_content with comment_limit=20 and comment_depth=2. Record the actual number of comments retrieved per post.  \n4. Identify threads where comment count > 50. For each of these, call Reddit:fetch_reddit_post_content again with comment_limit=50 and comment_depth=3 to capture deeper engagement.  \n5. Across all threads from both subreddits, detect those whose title or content includes any of the keywords: “GPT”, “Transformer”, “LLaMA”. For each matching post_id, call Reddit:fetch_reddit_post_content with comment_limit=50 and comment_depth=4.  \n6. Find any exact title matches between the two subreddits’ thread lists. For each matching pair of post_ids, call Reddit:fetch_reddit_post_content with comment_limit=5 and comment_depth=1 to directly compare top-level reactions.  \n7. Produce a JSON report with three sections:\n   a) \"subreddit_analysis\": For each subreddit, list all fetched threads sorted by the increase in comment count from step 3 to step 4, include average comment_depth, and highlight the top 3 keyword-related threads with their final comment counts.\n   b) \"cross_subreddit_pairs\": For each exact-title match, show both post_ids, their top 5 comments side by side, and a brief note on differences in tone or key concerns.\n   c) \"action_items\": Five concrete recommendations on which AI topics to monitor further, based on comment growth, keyword prevalence, and cross-community divergences.\n\nDeliver the report as a single JSON object with those three fields.",
+          "fuzzy_description": "Hey, I’m putting together a quick rundown of how active conversations have been in r/MachineLearning versus r/artificial over the past week. I’d love to know which of the hottest posts in each community really took off—how many comments they started with and how much they grew when you dig into the deeper threads. If any threads jumped past around fifty comments, could you take a closer look at how the discussion branches out there?\n\nI’m also really curious about anything mentioning GPT, Transformer, or LLaMA—how those keyword-driven talks compare in volume and depth to everything else. And then, for an extra comparison, if any exact same titles showed up in both subreddits, can you pull the first handful of comments from each and highlight any difference in tone or main concerns?\n\nAt the end, I need a sense of which discussions saw the biggest surge in engagement, the top three most-talked-about GPT/Transformer/LLaMA threads, and five solid recommendations on which AI topics are worth keeping an eye on next. I really need real comment counts and clear evidence behind it—no wild guesses. Thanks!",
+          "dependency_analysis": "Inherent dependencies: fetch_reddit_hot_threads outputs post_ids and comment counts that feed directly into fetch_reddit_post_content. Scenario-based dependencies:  \n• Sequential chain: Step 1→Step 3 (initial detail fetch)→Step 4 (deeper fetch for high-engagement posts).  \n• Branching based on intermediate results: in Step 4, only threads with >50 comments trigger a second fetch; in Step 5, only threads containing specific keywords trigger the deepest fetch.  \n• Parallel streams: both subreddits are fetched and processed concurrently, then merged for cross-subreddit comparison.  \n• Cross-comparison dependency: Step 6 requires matching titles across the two subreddits and triggers additional fetch calls.  \nThis design enforces multi-stage tool usage, conditional workflows, iterative deepening of analysis, and aggregation across parallel flows. All data flows stay within the Reddit server tools.",
+          "distraction_servers": [
+            "Bibliomantic",
+            "Context7",
+            "DEX Paprika",
+            "Google Maps",
+            "NASA Data",
+            "OpenAPI Explorer",
+            "Paper Search",
+            "Scientific Computing",
+            "Unit Converter",
+            "Wikipedia"
+          ]
+        },
+        {
+          "task_id": "reddit_001",
+          "task_description": "You are a community engagement analyst for the subreddit r/MachineLearning. Your objectives:\n\n1. Use the Reddit:fetch_reddit_hot_threads tool to retrieve the top 5 hot threads from r/MachineLearning (limit=5).\n2. Parse the returned list to identify:\n   a. The thread with the highest comment_count (call this Thread A).\n   b. The thread with the highest score (upvotes) among the remaining four (call this Thread B).\n3. Sequential workflow for Thread A:\n   a. Use Reddit:fetch_reddit_post_content with post_id of Thread A, comment_limit=15, comment_depth=3.\n   b. From the fetched comments, count how many of the top 15 comments have at least one reply. If that count exceeds 10, re-fetch Thread A with comment_limit=15 and comment_depth=5 to capture deeper discussion.\n4. Parallel workflow for Thread B:\n   a. In parallel with the above, use Reddit:fetch_reddit_post_content for Thread B with comment_limit=10, comment_depth=2.\n5. After all fetch calls complete, produce a JSON report containing an array named “threads” with two objects (for Thread A and Thread B). Each object must include:\n   - id: the Reddit post ID\n   - title: the thread title\n   - score: the thread’s score from step 1\n   - comment_count: the thread’s comment_count from step 1\n   - fetched_depth: the final comment_depth used\n   - top_comment_snippet: the text of the single most upvoted top-level comment fetched\n   - deeper_refetch_performed: true/false (true only if Thread A was re-fetched at depth 5)\n\nEnsure you do not request any extra information beyond what the two tools provide. The task is executable immediately without further clarification.",
+          "fuzzy_description": "Hey, I’m putting together a quick highlight for our ML community newsletter and I want to focus on two posts: the one that’s getting the most chatter right now and the next biggest by upvotes. Could you:\n\n• Grab the current top 5 hot threads from r/MachineLearning  \n• Figure out which one has the highest comment count and call that our “main” thread  \n• Skim its first 15 top-level comments (down to three replies deep) and check how many of those 15 actually sparked at least one reply—if more than 10 did, dig two more levels deep instead  \n• At the same time, pull the runner-up by score from the remaining four, read its first 10 comments up to two levels deep  \n• Finally, give me a JSON array of two objects (main and runner-up) where each object has:  \n  – id (post ID)  \n  – title  \n  – score  \n  – comment_count  \n  – fetched_depth (the depth you ended up using)  \n  – top_comment_snippet (the text of its single most upvoted top-level comment)  \n  – deeper_refetch_performed (true only if you had to go deeper on the main thread)\n\nI really need the real numbers and snippets so I can drop this straight into our newsletter—no guesses, just hard data. Thanks!\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "Key tool chains and data flow:\n- Sequential chain: Reddit:fetch_reddit_hot_threads → parse top threads → Reddit:fetch_reddit_post_content for Thread A (initial) → conditional re-fetch of Thread A.\n- Parallel chain: Reddit:fetch_reddit_post_content for Thread B runs concurrently with Thread A’s deeper analysis.\nCritical decision points:\n- Selection of Thread A based on highest comment_count.\n- Selection of Thread B based on highest score among remaining threads.\n- Conditional re-fetch for Thread A if more than 10 of the top 15 comments have at least one reply.\nParallel vs sequential:\n- The initial hot threads fetch is sequential.\n- Thread B’s content fetch runs in parallel with Thread A’s analysis and potential re-fetch.\nCross-server dependencies:\n- Not applicable: both tools reside on the Reddit server.\nIterative refinement:\n- Thread A may be fetched twice with increasing comment_depth based on intermediate comment-reply counts.\nData transformation:\n- Parse human-readable tool output to extract thread IDs, scores, and comment_counts.\n- Analyze comment trees to decide if deeper depth fetch is required.\nConditional workflows:\n- If more than 10 of the first 15 comments have replies, perform a deeper re-fetch (depth=5); otherwise retain initial depth=3.\nOutcome:\n- A self-contained JSON report ready for business analysis of community engagement patterns in r/MachineLearning hot threads.",
+          "distraction_servers": [
+            "Call for Papers",
+            "Context7",
+            "Huge Icons",
+            "Hugging Face",
+            "Math MCP",
+            "Metropolitan Museum",
+            "NixOS",
+            "OpenAPI Explorer",
+            "Paper Search",
+            "Weather Data"
+          ]
+        }
+      ],
+      "servers": [
+        "Reddit"
+      ],
+      "combination_name": "Single Server: Reddit",
+      "combination_type": "single_server"
+    },
+    {
+      "server_name": "National Parks",
+      "tasks": [
+        {
+          "task_id": "national_parks_000",
+          "task_description": "You are planning a 7-day multi-park camping and hiking adventure that visits national parks in California and Oregon. First, identify up to 10 parks in CA and OR offering both hiking and camping. Then, for each park found, gather detailed park information, current alerts, visitor center operating hours, campground amenities, and upcoming events over the next 7 days. Exclude any park that has active closure or hazard alerts, whose visitor centers are not open at least 9 AM–5 PM every day, or whose campgrounds do not list showers. Finally, from the remaining parks, select those with at least one event starting after 6 PM and build a day-by-day itinerary showing for each park: park name, summary from details, list of open visitor centers and hours, campsite names with showers, and scheduled evening events. Present your result as a JSON itinerary array with one entry per day and park.",
+          "fuzzy_description": "I’ve been plotting a week-long road trip through California and Oregon, bouncing between parks where I can both hike and camp. I’d love to avoid anywhere that’s under closure alerts or has serious hazards, and I really need campgrounds that actually have showers—plus I’d like the visitor centers to be open every day from about 9 AM to 5 PM so I’m not showing up at a ghost town. On top of that, I’d be thrilled if there’s something cool going on each evening after 6 PM—like ranger talks, stargazing programs, live music, whatever. \n\nCould you help me figure out which parks fit all those criteria over the next seven days and then sketch out a day-by-day plan? I’m imagining something that tells me each day: where I’m headed, a quick park overview, which visitor centers are open with their hours, which campsites have showers, and any evening events I shouldn’t miss. \n\nI really need the details—current alerts, official hours, amenity lists, event schedules—so I can actually book and not just rely on hearsay. Thanks!\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "Key tool chain: 1) Use findParks(stateCode=\"CA,OR\", activities=\"hiking,camping\", limit=10) to obtain a list of candidate parkCodes. 2) For each parkCode, call getParkDetails to pull descriptive data. 3) Feed the same parkCode into getAlerts to check for closures or hazard alerts. Decision point: if any alert indicates a closure or hazard, drop this park. 4) For surviving parks, call getVisitorCenters to retrieve operating hours. Decision: require visitor centers open at least 9 AM–5 PM all 7 days; otherwise drop. 5) Call getCampgrounds for each remaining parkCode to get amenities; filter campgrounds to those listing \"showers\". If none, drop park. 6) Call getEvents(parkCode, dateStart=\"today\", dateEnd=\"next 7 days\") to list upcoming events. Decision: require at least one event with start time after 18:00; if none, drop park. 7) Aggregate all retained data into a day-by-day itinerary. Data flow is sequential from search → detail fetch → filtering via alerts → filtering via visitor centers → filtering via campgrounds → filtering via events → final assembly. Parallel calls may be made for alerts, visitor centers, campgrounds, and events once parkCodes are known. All dependencies use parkCode outputs from earlier steps. No cross-server dependencies are needed since all tools reside on the National Parks server.",
+          "distraction_servers": [
+            "Bibliomantic",
+            "Call for Papers",
+            "DEX Paprika",
+            "FruityVice",
+            "Math MCP",
+            "Medical Calculator",
+            "Movie Recommender",
+            "OKX Exchange",
+            "OSINT Intelligence",
+            "Weather Data"
+          ]
+        },
+        {
+          "task_id": "national_parks_001",
+          "task_description": "You are planning a series of backpacking trips over the next 7 days and need to recommend the top 3 California national parks that offer both hiking and camping, have minimal safety closures, visitor services open daily, adequate campground amenities, and at least one public event scheduled. Perform the following steps:\n\n1. Use National Parks:findParks with stateCode=\"CA\", activities=\"hiking,camping\", limit=10 to retrieve candidate parks.\n2. For each returned park, call National Parks:getParkDetails to obtain the annual visitor count and parkCode.\n3. Select the 3 parks with the highest annual visitor counts.\n4. For each of these 3 parks:\n   a. Call National Parks:getAlerts with parkCode and limit=10 to fetch current alerts. Exclude any park with 3 or more active alerts (closures or hazards).\n   b. Call National Parks:getVisitorCenters with parkCode and limit=10 to retrieve operating hours. Verify that at least one visitor center is open every day over the next 7 days. Exclude any park that fails this requirement.\n   c. Call National Parks:getCampgrounds with parkCode and limit=10 to get campground details. Filter for campgrounds offering both potable water and toilets. Record how many such campgrounds are available; if fewer than 2, mark the park as having limited campground capacity.\n   d. Call National Parks:getEvents with parkCode, dateStart=\"today\", dateEnd=\"7 days from today\", limit=5 to list upcoming events. Record how many events are scheduled.\n5. For each park that passes the alert and visitor-center checks, produce a recommendation entry including:\n   • parkCode and full park name\n   • number of active alerts\n   • count of days covered by visitor-center hours\n   • number of campgrounds with water and toilets (and note if limited)\n   • number of upcoming events\n   • overall recommendation: “Highly Recommended” if at least 2 campgrounds and ≥1 event, otherwise “Recommended with Caveats.”\n\nOutput a JSON array of recommendation entries for all qualifying parks.",
+          "fuzzy_description": "I’m planning a week of backpacking in California and trying to pick the three best national parks that won’t let me down. Ideally they’d offer solid hiking and camping, have almost no current closures or safety alerts, keep their visitor centers or services open every day for the next seven days, and have at least a couple of campgrounds with real potable water and toilets. It’d be even better if there’s some kind of event happening—like a ranger talk or guided walk—sometime in the upcoming week. Can you help me narrow it down to the top three spots and show me the proof—how many alerts they each have, their daily service coverage, how many campgrounds meet the water-and-toilet requirement, and what events they’ve got lined up? I need actual numbers and details so I can book with confidence.\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "This task weaves together all six National Parks tools in a sequential and branching workflow: 1) findParks→getParkDetails establishes the candidate pool and selects the top 3 by annual visitors. 2) For each top park, getAlerts is invoked to enforce a safety filter (exclude parks with ≥3 alerts). 3) The remaining parks undergo parallel queries to getVisitorCenters (to confirm daily coverage next 7 days), getCampgrounds (to identify campgrounds with potable water & toilets), and getEvents (to fetch events in the next 7 days). 4) Each of these outputs drives decision points: alerts count determines exclusion; visitor center schedule must cover all 7 days; campground count ≥2 yields full capacity vs limited; events count ≥1 informs recommendation level. 5) Finally, results are merged into a consolidated recommendation per park. This chain cannot be collapsed as each tool’s output sets parameters or filtering criteria for the next step.",
+          "distraction_servers": [
+            "Call for Papers",
+            "DEX Paprika",
+            "Google Maps",
+            "Huge Icons",
+            "Metropolitan Museum",
+            "NixOS",
+            "OpenAPI Explorer",
+            "Paper Search",
+            "Unit Converter",
+            "Weather Data"
+          ]
+        }
+      ],
+      "servers": [
+        "National Parks"
+      ],
+      "combination_name": "Single Server: National Parks",
+      "combination_type": "single_server"
+    },
+    {
+      "server_name": "Metropolitan Museum",
+      "tasks": [
+        {
+          "task_id": "metropolitan_museum_000",
+          "task_description": "Generate a comparative visual catalog of five ‘sword’ objects from two distinct Met Museum departments (“Arms and Armor” and “Medieval Art”) for a research presentation. Steps: 1) List all Met departments to identify the numeric IDs for “Arms and Armor” and “Medieval Art.” 2) For each of these two departments, search for objects with “sword” in the title that have images, retrieving all matching Object IDs. 3) If a department returns fewer than five sword objects with images, perform a fallback search in that same department for “sword” without requiring images to reach five objects. 4) From the resulting IDs in each department, select the first five unique Object IDs. 5) Fetch full details and images for each selected Object ID. 6) Compile a side-by-side catalog listing, for each object: Department Name, Object Title, Object Date, Artist or Culture, and Image URL. Present the final catalog as a JSON array with two entries (one per department), each containing its five object records.",
+          "fuzzy_description": "I’m putting together a research talk on medieval swords and I want to pick out five examples from two different corners of the Met—the Arms and Armor collection and the Medieval Art galleries. Ideally each sword would have a nice photo for my slides, but if one section only has a few with images, it’s okay to include some without so I still end up with five. For each piece, could you pull together its name, the date or era it comes from, the artist or cultural origin, and a link to its image (if there is one)? I really need concrete details and real links so I can plug them straight into my presentation without any guesses.",
+          "dependency_analysis": "1. list-departments → identifies departmentId values for “Arms and Armor” and “Medieval Art.” 2. search-museum-objects depends on departmentId and filters: first with hasImages=true. 3. Decision point: if fewer than five IDs returned for a department, trigger a second search-museum-objects call with hasImages=false (fallback branch). 4. get-museum-object consumes each selected Object ID to retrieve full metadata and image. 5. Sequential dependencies: list-departments drives both search calls; each search feeds into its own get-museum-object calls. 6. Parallel workflow over two departments (same chain applied twice), with results combined into a unified catalog. Cross-validation via fallback search ensures minimum result count per department.",
+          "distraction_servers": [
+            "Car Price Evaluator",
+            "DEX Paprika",
+            "Google Maps",
+            "Hugging Face",
+            "Medical Calculator",
+            "Movie Recommender",
+            "OSINT Intelligence",
+            "OpenAPI Explorer",
+            "Unit Converter",
+            "Wikipedia"
+          ]
+        },
+        {
+          "task_id": "metropolitan_museum_001",
+          "task_description": "Compile a catalog of the five earliest-dated landscape-themed paintings in the “European Paintings” department of the Metropolitan Museum of Art. First, list all departments to identify the numeric ID for “European Paintings.” Next, perform a search for objects with the query “landscape” scoped to that department. If the initial search returns more than 100 results, repeat the search limiting results to objects with images only. From the final list of object IDs, select the five objects with the earliest documented object dates. For each selected object, retrieve full details—including title, artist, object date, medium, and primary image URL—and present them in a summary table with columns: Title, Artist, Date, Medium, Image URL.",
+          "fuzzy_description": "I’ve gotten myself into a bit of an art-history deep dive: my prof wants a quick reference on the absolute earliest landscape paintings in the Met’s European collection—like, the ones that kicked off the whole genre over there. But I’m kind of lost on where to even start in their database. I think there’s a “European Paintings” section, and I only really want works tagged as “landscape,” ideally with actual images so I can drop them into my slides. Could you help me figure out which five pieces have the oldest documented dates, and then pull together each painting’s title, artist, date, medium, and a link to its main image? I really need solid, real-data details and URLs—nothing hand-wavy—so I can back up my little presentation. Thanks!\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "1. list-departments → provides department names and IDs. 2. search-museum-objects (q='landscape', departmentId from step 1) → returns total count and object IDs. 3. Decision point: if total count > 100, call search-museum-objects again with hasImages=true and same departmentId to refine to only objects with images. 4. From the final list of IDs, sort by objectDate and select the five earliest. 5. For each of those five IDs, call get-museum-object → gathers title, artist, date, medium, image URL. Sequential chain: list-departments → search-museum-objects → conditional second search → get-museum-object (iterative loop of five calls). All data flows from one tool’s output to the next tool’s input, with a conditional branch based on the initial result count.",
+          "distraction_servers": [
+            "Bibliomantic",
+            "Call for Papers",
+            "FruityVice",
+            "Hugging Face",
+            "Medical Calculator",
+            "Movie Recommender",
+            "NASA Data",
+            "OKX Exchange",
+            "OSINT Intelligence",
+            "Wikipedia"
+          ]
+        }
+      ],
+      "servers": [
+        "Metropolitan Museum"
+      ],
+      "combination_name": "Single Server: Metropolitan Museum",
+      "combination_type": "single_server"
+    },
+    {
+      "server_name": "Movie Recommender",
+      "tasks": [
+        {
+          "task_id": "movie_recommender_000",
+          "task_description": "You are curating a two-day thematic movie marathon around three distinct themes: “space exploration”, “post-apocalyptic”, and “steampunk”.\n\n1. For each theme, call Movie Recommender:get_movies with keyword exactly “space exploration”, “post-apocalyptic”, and “steampunk” (in parallel) to retrieve 10 suggestions each.\n2. Parse the three returned lists and identify any movie title that appears in at least two of the lists.\n   • If you find one or more overlapping titles, designate those as your core_movies.\n   • If there are no overlaps, for each theme take the first two movies (by list order) as core_movies (total of six).\n3. For each core_movie title, call Movie Recommender:get_movies again with keyword exactly “movies like <core_movie>” to retrieve 5 similar suggestions per core movie.\n4. Aggregate all the newly returned lists (parallel expansion calls), deduplicate titles, and compute a frequency count of how many expansion lists each title appeared in.\n5. Produce the final output as a JSON object with these fields:\n   • \"thematic_lists\": an object with keys \"space_exploration\", \"post_apocalyptic\", \"steampunk\", each mapped to its list of 10 titles from step 1.\n   • \"core_movies\": the list of titles chosen in step 2.\n   • \"expanded_recommendations\": an object mapping each core_movie to its 5 similar titles from step 3.\n   • \"final_recommendations\": the list of unique titles from step 4, sorted descending by frequency count (titles appearing in more expansion lists come first; ties broken alphabetically).",
+          "fuzzy_description": "Hey, I’m putting together a two-day movie marathon for my film club and I want three very different vibes: space exploration, post-apocalyptic survival, and that quirky steampunk flair. I’m thinking about ten go-to films for each vibe, but I also want to see if any titles show up in more than one category—that way those overlapping movies become the marquee picks. If nothing overlaps, I’ll just pick the top couple from each list. Then, for each of those headliners, I’d love around five more “movies like” them to really flesh out the lineup. Finally, I need a big master list of all those extra suggestions, sorted so the films that pop up most often float to the top. Can you pull together the original vibe lists, highlight the core picks, share all the expansion titles, and wrap up with that final ranked recommendation list? I really need actual movie names and how frequently they appear—no vague gut feelings—because I have to show this to the group.\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "Step 1 runs three parallel get_movies calls for the three theme keywords, producing three arrays. Step 2 is a data transformation and decision point: compare the arrays to detect overlaps. If overlaps exist (branch A), those overlapping titles become core_movies; if none (branch B), extract the top 2 titles from each theme list as core_movies. Step 3 iterates over core_movies and issues a get_movies call per core movie using the phrase “movies like <title>” to expand recommendations. Step 4 combines these parallel expansion outputs, deduplicates, and counts frequency across lists. Step 5 consolidates all intermediate results into the specified JSON structure. All dependencies flow sequentially and conditionally: the branch decision in Step 2 determines the core set for Step 3, and multiple parallel calls feed into a final aggregation in Step 4.",
+          "distraction_servers": [
+            "DEX Paprika",
+            "FruityVice",
+            "Game Trends",
+            "Huge Icons",
+            "Hugging Face",
+            "Medical Calculator",
+            "NASA Data",
+            "NixOS",
+            "OSINT Intelligence",
+            "Paper Search"
+          ]
+        },
+        {
+          "task_id": "movie_recommender_001",
+          "task_description": "You are the curator for an upcoming week-long sci-fi film showcase. Your goal is to assemble a final slate of 5 distinct movies that best match both core ‘science fiction’ themes and narrower ‘space exploration’ themes, with a fallback to ‘upcoming week’ releases if necessary. Execute the following steps without asking for additional information:\n\n1. In parallel, call get_movies twice:\n   • get_movies(keyword: \"science fiction\") → SciFiList (a list of 10 sci-fi movie titles)\n   • get_movies(keyword: \"space exploration\") → SpaceList (a list of 10 space-exploration titles)\n2. Compute CommonList = intersection of SciFiList and SpaceList.\n3. Decision point:\n   • If CommonList contains 5 or more titles, set FinalList to the first 5 titles in CommonList.\n   • If CommonList contains fewer than 5 titles, call get_movies(keyword: \"science fiction upcoming week\") → UpcomingSciFi (a list of 10 upcoming sci-fi releases). Remove any titles already in SciFiList or SpaceList, then set FinalList = all titles in CommonList plus the first (5 – |CommonList|) titles from the filtered UpcomingSciFi list.\n4. Return a JSON object with keys:\n   {\n     \"final_movies\": [array of 5 selected titles],\n     \"source_breakdown\": {\n       \"common_list\": [titles from CommonList included],\n       \"upcoming_recommendations\": [titles added from UpcomingSciFi]\n     },\n     \"selection_rationale\": \"Brief explanation of how many came from overlap vs. upcoming releases.\"\n   }",
+          "fuzzy_description": "Hey, I’m putting together a week-long sci-fi film showcase at my local theater next week and need to nail down a slate of five movies. Ideally, they’d all be solid science-fiction picks that really lean into space exploration—starship voyages, alien worlds, that kind of epic adventure. I’m not sure there are five titles that hit both “pure sci-fi” and “deep space” perfectly, so if we can’t find enough classics crossing both, I’d top up the list with the best new sci-fi releases opening in the next seven days. Could you help me choose those five, highlight which ones come from that overlap of space-heavy sci-fi and which are the fresh upcoming flicks, and give me a quick note on why each made the cut? I really need actual titles with solid reasons so I can pitch it to our crowd.\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "Tool: Movie Recommender:get_movies. \n- Parallel calls: first with keyword 'science fiction' (SciFiList), second with 'space exploration' (SpaceList). \n- Sequential dependency: third step intersects the two lists to produce CommonList. \n- Decision branch: if CommonList size ≥5, no further tool calls; else trigger a fallback tool call with 'science fiction upcoming week' (UpcomingSciFi). \n- Data flow: SciFiList ∧ SpaceList → CommonList → decision → possible UpcomingSciFi call → FinalList. \n- Iterative refinement: initial overlap may be insufficient, triggering a second round of get_movies with refined keyword. \n- Conditional workflow: branch on CommonList size. \n- All data transformation and filtering done in-memory; tool calls supply only raw title lists. \n- This task cannot be completed without orchestrating multiple get_movies calls and applying decision logic on their outputs.",
+          "distraction_servers": [
+            "BioMCP",
+            "Call for Papers",
+            "Car Price Evaluator",
+            "DEX Paprika",
+            "FruityVice",
+            "NixOS",
+            "OSINT Intelligence",
+            "Reddit",
+            "Weather Data",
+            "Wikipedia"
+          ]
+        }
+      ],
+      "servers": [
+        "Movie Recommender"
+      ],
+      "combination_name": "Single Server: Movie Recommender",
+      "combination_type": "single_server"
+    }
+  ]
+}

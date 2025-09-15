@@ -26,6 +26,9 @@ wheels/
 mcp_server_test.log
 mcp_test_summary.txt
 mcp_test_detailed_report.json
+benchmark_results*
+mcp_info_collection.log
+mcp_servers_info.*
 
 # Node.js
 node_modules/
@@ -39,6 +42,7 @@ yarn-error.log*
 *.swp
 *.swo
 *~
+.claude
 
 # OS
 .DS_Store
@@ -55,3 +59,8 @@ Thumbs.db
 *.tmp
 *.temp
 .cache/
+cache/
+eval_results/
+
+# API keys
+mcp_servers/api_key

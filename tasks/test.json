@@ -1,0 +1,24 @@
+{
+  "generation_info": {
+    "status": "completed"
+  },
+  "server_tasks": [
+    {
+      "server_name": "Time MCP",
+      "tasks": [
+        {
+          "task_id": "time_mcp_simple_test",
+          "task_description": "Get the current time and convert it to UTC format. Use the Time MCP server to get the current date and time information.",
+          "fuzzy_description": "Hey, I need to know what time it is right now in UTC format. Could you help me get that?",
+          "dependency_analysis": "Simple task using Time MCP server to get current time information.",
+          "distraction_servers": []
+        }
+      ],
+      "servers": [
+        "Time MCP"
+      ],
+      "combination_name": "Single Server: Time MCP",
+      "combination_type": "single_server"
+    }
+  ]
+}

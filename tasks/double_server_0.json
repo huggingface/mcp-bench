@@ -1,0 +1,297 @@
+{
+  "generation_info": {
+    "status": "completed"
+  },
+  "server_tasks": [
+    {
+      "server_name": "Paper Search+BioMCP",
+      "tasks": [
+        {
+          "task_id": "paper_search_biomcp_000",
+          "task_description": "Investigate the current research landscape and clinical investigations of the BRAF V600E mutation in melanoma treatment resistance. 1) Use BioMCP:think (thoughtNumber=1, totalThoughts=5) to outline the plan. 2) Retrieve gene annotation for BRAF with BioMCP:gene_getter (gene_id_or_symbol=\"BRAF\"). 3) Search MyVariant.info for the BRAF p.V600E variant using BioMCP:variant_searcher (gene=\"BRAF\", hgvsp=\"p.V600E\"). 4) If variant_searcher returns at least one record, fetch the top variant details with BioMCP:variant_getter (variant_id=<top_result.id>, include_external=true). 5) Search for recent research articles about BRAF V600E and melanoma treatment resistance with BioMCP:article_searcher (genes=[\"BRAF\"], variants=[\"V600E\"], diseases=[\"melanoma\"], keywords=[\"treatment resistance\"], include_preprints=true, page_size=5). 6) For the top two article identifiers returned, fetch full text and abstract with BioMCP:article_getter (pmid=<first_id>) and (pmid=<second_id>). 7) In parallel, use Paper Search:search_arxiv (query=\"melanoma BRAF V600E treatment resistance\", max_results=5). From its top result, download and extract the PDF text with Paper Search:download_arxiv (paper_id=<top_arxiv_id>, save_path=\"./downloads\") then Paper Search:read_arxiv_paper (paper_id=<top_arxiv_id>, save_path=\"./downloads\"). 8) Also use Paper Search:search_pubmed (query=\"melanoma BRAF V600E treatment resistance\", max_results=5). From the top two PMIDs, fetch abstracts via BioMCP:article_getter. 9) Identify ongoing clinical trials testing BRAF inhibitors in melanoma with BioMCP:trial_searcher (conditions=[\"Melanoma\"], interventions=[\"vemurafenib\"], phase=\"PHASE2\"). If no Phase 2 trials are returned, repeat trial_searcher with phase=\"PHASE3\". 10) For each NCT ID returned, get full trial details with BioMCP:trial_getter (nct_id=<nct_id>) and site locations with BioMCP:trial_locations_getter (nct_id=<nct_id>). 11) Search NCI’s trial organization database for cancer centers in Boston, MA using BioMCP:nci_organization_searcher (city=\"Boston\", state=\"MA\"). 12) Cross-match the list of trial site institutions against the Boston-area NCI organizations to highlight which local centers are conducting BRAF V600E melanoma trials. 13) Summarize and output a JSON report containing: gene_info, variant_info, literature_findings (titles, abstracts), arxiv_summary (extracted text snippets), pubmed_summaries, trial_list (NCT IDs, titles, phases), trial_locations, and boston_nci_orgs_conducting_trials.",
+          "fuzzy_description": "I’m working on a project about why melanoma patients with the BRAF V600E mutation so often become resistant to treatment, and I’m a bit stuck piecing everything together. I’d love to know:\n\n• What we actually know about that V600E change in BRAF – basic gene details, how it tweaks the protein’s function, and any hotspots or annotations researchers point to.  \n• The most important recent studies (including a couple of preprints if there’s anything interesting) that dive into resistance mechanisms. Can you give me their titles, abstracts or main take-home points, and any standout data?  \n• Which clinical trials are currently testing BRAF inhibitors in melanoma (ideally phase 2 or 3), plus their IDs, names, phases, and where they’re recruiting.  \n• And, almost as a bonus, whether any of those trial sites line up with the big cancer centers in Boston.\n\nI really need solid numbers and references—I can’t present this to my supervisor with just vague summaries. Thanks!\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "Inherent dependencies: search→fetch→read chains for both servers; e.g., BioMCP:gene_getter output feeds variant_searcher; variant_searcher returns variant IDs for variant_getter; article_searcher/ search_pubmed produce PMIDs/DOIs consumed by article_getter; Paper Search:search_arxiv yields arXiv IDs for download_arxiv/read_arxiv_paper. Scenario-based dependencies: if variant_searcher returns no records, skip variant_getter; if no Phase2 trials, switch to Phase3. Parallel workflows: BioMCP article_searcher runs in parallel with Paper Search searches (arXiv and PubMed). Cross-server dependencies: PubMed PMIDs from Paper Search:search_pubmed are fetched via BioMCP:article_getter; arXiv preprints feed into Paper Search read pipeline; clinical trial site names from BioMCP:trial_locations_getter are matched against Boston NCI organizations returned by BioMCP:nci_organization_searcher. Critical decision points: variant existence triggers deep variant analysis; trial phase availability dictates branch to Phase3; cross-matching trial sites against local NCI orgs. The workflow requires strict sequential ordering where each tool’s output parameterizes the next, with conditional loops and parallel branches across both Paper Search and BioMCP servers.",
+          "distraction_servers": [
+            "FruityVice",
+            "Google Maps",
+            "Math MCP",
+            "Medical Calculator",
+            "National Parks",
+            "NixOS",
+            "OSINT Intelligence",
+            "OpenAPI Explorer",
+            "Unit Converter",
+            "Weather Data"
+          ]
+        }
+      ],
+      "servers": [
+        "Paper Search",
+        "BioMCP"
+      ],
+      "combination_name": "Academic Research Duo",
+      "combination_type": "two_server_combinations"
+    },
+    {
+      "server_name": "Paper Search+BioMCP",
+      "tasks": [
+        {
+          "task_id": "paper_search_biomcp_001",
+          "task_description": "Perform a comprehensive analysis of BRAF V600E–targeted Phase 3 melanoma clinical trials and associated resistance mechanisms by integrating BioMCP and Paper Search tools. The agent should:\n\n1. Plan the research strategy using BioMCP:think.\n2. Retrieve gene annotation for BRAF with BioMCP:gene_getter (gene_id_or_symbol=\"BRAF\").\n3. Query MyVariant.info for the V600E variant with BioMCP:variant_searcher (gene=\"BRAF\", hgvsp=\"p.V600E\").\n4. Identify all ongoing or completed Phase 3 melanoma trials of BRAF inhibitors via BioMCP:trial_searcher (conditions=[\"melanoma\"], interventions=[\"BRAF inhibitor\"], phase=\"PHASE3\", page_size=10).\n5. For each returned NCT ID:\n   a. Extract protocol details with BioMCP:trial_protocol_getter.\n   b. Extract outcome measures with BioMCP:trial_outcomes_getter.\n   c. List all linked publications with BioMCP:trial_references_getter.\n   d. For each PMID from references, fetch title, abstract, and full text with BioMCP:article_getter.\n6. Search for preprints on resistance to BRAF therapy with Paper Search:search_biorxiv (query=\"BRAF V600E melanoma resistance\", max_results=5).\n7. For each bioRxiv DOI:\n   a. Download the PDF with Paper Search:download_biorxiv.\n   b. Extract text with Paper Search:read_biorxiv_paper.\n   c. Detect any novel protein-level variants matching pattern \"p.[A-Z][0-9]+[A-Z]\".\n   d. For each novel variant:\n      i. Query BioMCP:variant_searcher (hgvsp=<variant>, include_cbioportal=false).\n      ii. If significance=\"pathogenic\" and frequency_max<0.01, retrieve full annotations with BioMCP:variant_getter (variant_id=<variant>).\n8. If any trial outcome shows an adverse event rate above 20%, extract the drug names from the trial interventions and call BioMCP:drug_getter for each drug.\n9. Compile a JSON report containing:\n   • BRAF gene summary\n   • V600E variant frequency and clinical significance\n   • Phase 3 trial list with protocol summaries, outcome metrics, and publication abstracts\n   • Novel resistance variants with database annotations\n   • Drug profiles for interventions with high adverse event rates",
+          "fuzzy_description": "Hey, I’m prepping a report for my boss on BRAF V600E in melanoma and I’ve hit a wall. I really need to know how common that V600E swap is and what clinical impact it actually has. Then I want a clear rundown of the big Phase III trials testing BRAF inhibitors in melanoma—what each one showed on outcomes, whether any of them saw serious side-effect rates above about 20% (and if so, which drugs were involved), plus the key publications behind each trial. On top of that, I’ve heard whispers about brand-new protein-level tweaks that help tumors resist those drugs—some of it even only on preprint servers in the last few months. Could you dig up the hard numbers, abstracts or summaries (even DOIs or PubMed IDs), and basically give me solid, evidence-backed info I can actually cite? I don’t want just high-level chatter—I need real data for slides. Thanks!",
+          "dependency_analysis": "Key tool chains and data flow:\n• Initial planning with BioMCP:think to structure the workflow.\n• BioMCP:gene_getter → provides BRAF official annotation; output feeds into BioMCP:variant_searcher.\n• BioMCP:variant_searcher (gene and protein-level filters) → yields variant frequency and significance; conditional branch: if pathogenic and rare, invoke BioMCP:variant_getter.\n• BioMCP:trial_searcher → returns multiple NCT IDs; for each ID invoke three sequential getters (protocol, outcomes, references) to build trial dossiers.\n• BioMCP:trial_references_getter → yields PMIDs; each PMID drives BioMCP:article_getter for full text retrieval.\n• Paper Search:search_biorxiv → cross-server dependency: preprint DOIs feed download/read pipeline.\n• Paper Search:download_biorxiv → PDF path → Paper Search:read_biorxiv_paper → raw text; text mining yields novel variant patterns.\n• Novel variant strings → BioMCP:variant_searcher → conditional BioMCP:variant_getter if criteria met.\n• Outcome analysis introduces decision point: adverse events >20% triggers BioMCP:drug_getter calls for each implicated intervention drug.\n\nCritical decision points:\n1. Branch to variant_getter only for rare pathogenic variants.\n2. Branch to drug_getter only if adverse event threshold is exceeded.\n3. Loop over each trial and each preprint DOI sequentially, with outputs determining next calls.\n\nCross-server dependencies:\n– Literature and preprint text from Paper Search guides variant searches in MyVariant.info (BioMCP).\n– Trial-linked PubMed IDs from BioMCP feed into BioMCP:article_getter rather than Paper Search PubMed search.\n\nParallel vs sequential:\n– Trials processing is parallelizable per NCT but must sequence getters per trial.\n– Preprint download/read is sequential per DOI, then mining → variant queries.\n\nThis workflow cannot proceed without following the tool chain in order and reflecting conditional branches based on intermediate results.",
+          "distraction_servers": [
+            "DEX Paprika",
+            "FruityVice",
+            "Huge Icons",
+            "Math MCP",
+            "Medical Calculator",
+            "Movie Recommender",
+            "OKX Exchange",
+            "OSINT Intelligence",
+            "Weather Data",
+            "Wikipedia"
+          ]
+        }
+      ],
+      "servers": [
+        "Paper Search",
+        "BioMCP"
+      ],
+      "combination_name": "Academic Research Duo",
+      "combination_type": "two_server_combinations"
+    },
+    {
+      "server_name": "Wikipedia+NASA Data",
+      "tasks": [
+        {
+          "task_id": "wikipedia_nasa_data_000",
+          "task_description": "Using NASA Data:get_notifications with notification_type=\"all\" for the past 7 days, retrieve all DONKI space weather notifications. From the response, identify each unique event category present: FLR (solar flares), CME (coronal mass ejections), GST (geomagnetic storms), SEP (solar energetic particles), MPC (magnetopause crossings), RBE (radiation belt enhancements), and HSS (high speed streams). For each category found:\n1. Filter that category’s notifications and select the one with the highest magnitude or intensity field; record its \"event_date\".\n2. Call the matching detailed NASA Data tool with start_date and end_date both set to that event_date:\n   • FLR → get_solar_flare\n   • CME → get_coronal_mass_ejection\n   • GST → get_geomagnetic_storm\n   • SEP → get_solar_energetic_particle\n   • MPC → get_magnetopause_crossing\n   • RBE → get_radiation_belt_enhancement\n   • HSS → get_hight_speed_stream\n3. From the detailed metrics output, keep the full JSON response.\n4. Use the category name (e.g., \"Solar flare\", \"Coronal mass ejection\") to query Wikipedia: call Wikipedia:search_wikipedia with that exact query and limit=5; pick the first title from the results.\n5. Call Wikipedia:summarize_article_for_query with the chosen title, query=\"impact on Earth\", max_length=250 to get a focused summary.\n6. Call Wikipedia:extract_key_facts with title, topic_within_article=\"impact on Earth\", count=5 to extract five key facts.\n7. Call Wikipedia:get_related_topics with title, limit=5 to list related topics.\n8. Construct a final JSON report with an array \"events\", where each element includes:\n   • \"category\": event category\n   • \"nasa_metrics\": JSON from step 2\n   • \"wiki_summary\": the 250-character summary\n   • \"wiki_key_facts\": list of five key facts\n   • \"wiki_related_topics\": list of five related topics\n   • \"validation\": a short statement comparing the NASA magnitude/intensity to Wikipedia’s described typical ranges or impacts (e.g., “The X9.3 flare magnitude matches Wikipedia’s definition of a severe solar flare”).",
+          "fuzzy_description": "I’m working on a little side project for my boss about last week’s space weather chaos. I know we had a mix of solar flares, CMEs, geomagnetic storms, particle events, magnetopause crossings and high-speed streams, but I really want to nail down exactly which single event in each category was the most intense over the past seven days and the precise date it happened. \n\nOnce we’ve got those peak events, could you pull in the full, raw metrics for each one so I’ve got the hard numbers? Then—just to make sure I’m not shooting in the dark—can you look up each type on Wikipedia (grab the first hit), give me a concise summary (around 200–250 characters) focused on its impact on Earth, extract about five key facts about those impacts, and suggest a few related topics I could dig into? Finally, I need a quick line for each event comparing our numbers to what Wikipedia calls “mild,” “moderate,” or “severe,” so I know if we really saw a monster flare or just a run-of-the-mill storm. \n\nI’ve got to present all this with real data and solid sources—no hand-waving—so any help would be awesome. Thanks!\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "Inherent dependencies: NASA Data:get_notifications → parses to event categories → each category maps to a specific detailed NASA Data tool (get_solar_flare, get_coronal_mass_ejection, etc.). Wikipedia:search_wikipedia → returns a title → Wikipedia:summarize_article_for_query consumes the title and query → Wikipedia:extract_key_facts and Wikipedia:get_related_topics both consume the title. Scenario-based dependencies: the output of get_notifications dynamically determines which detailed NASA Data tools to invoke and with which event_date parameters. The NASA Data detailed outputs set the \"nasa_metrics\" branch. Each category name from NASA output drives the Wikipedia search query. Decision points: skip categories that do not appear in the notifications payload; within each category, select the notification with highest magnitude. Parallel vs sequential: get_notifications is the single entry point and must complete first; subsequent detailed NASA Data calls for each present category can run in parallel. After each NASA detail call, its result triggers a parallel chain of three Wikipedia calls. Cross-server dependencies: NASA Data outputs (event_date and category names) feed directly into the parameters for Wikipedia tools, and Wikipedia outputs (summaries, key facts) are used to validate or contextualize NASA metrics. Data flow: notifications → parse → per-category detail fetch → parse metrics → per-category Wikipedia search and analysis → combine into final report.",
+          "distraction_servers": [
+            "Context7",
+            "DEX Paprika",
+            "Game Trends",
+            "Google Maps",
+            "Medical Calculator",
+            "Metropolitan Museum",
+            "NixOS",
+            "OpenAPI Explorer",
+            "Paper Search",
+            "Weather Data"
+          ]
+        }
+      ],
+      "servers": [
+        "Wikipedia",
+        "NASA Data"
+      ],
+      "combination_name": "Knowledge Explorer",
+      "combination_type": "two_server_combinations"
+    },
+    {
+      "server_name": "Wikipedia+NASA Data",
+      "tasks": [
+        {
+          "task_id": "wikipedia_nasa_data_001",
+          "task_description": "Analyze all near-Earth asteroids that made their closest Earth approach in the past 7 days, assess whether high solar flare activity coincided with their approach (potentially disrupting observations), and compile detailed background research on the top three hazard-ranked asteroids. Steps: 1) Call NASA Data:get_asteroids_feed with start_date = \"7 days ago\" to list all approaching asteroids. 2) For each asteroid in the feed, call NASA Data:get_asteroid_lookup using its NASA JPL ID to retrieve approach distance, velocity, estimated diameter, and hazard potential. 3) In parallel, call NASA Data:get_solar_flare with start_date = \"7 days ago\" and end_date = \"today\" to retrieve all solar flares in the same period. 4) For each asteroid, flag it as having an observational challenge if any solar flare of class M or higher occurred within ±1 day of its close approach date. 5) Rank asteroids by estimated diameter and select the top three that were flagged. 6) For each of these three asteroids: a) Call Wikipedia:search_wikipedia with query equal to the asteroid’s name to identify the main article title. b) Call Wikipedia:get_article to fetch full article content. c) Call Wikipedia:extract_key_facts with topic_within_article = \"orbit\" and count = 5. d) Call Wikipedia:summarize_article_section with section_title = \"Discovery\" and max_length = 200. 7) Produce a final report containing: • A table of all asteroids with columns: Name, Close Approach Date, Distance (km), Velocity (km/s), Estimated Diameter (m), Hazard Potential (yes/no), Observational Challenge Flag (yes/no). • For each of the top three flagged asteroids: key orbit facts list and a 200-word summary of the Discovery section. Output the report as JSON with two fields: “overview_table” (array of rows) and “detailed_background” (object keyed by asteroid name).",
+          "fuzzy_description": "I’ve got this astronomy assignment for my research group, and it’s been bugging me: I need to know which near-Earth rocks swung by in the past week, and whether any big solar storms might’ve garbled our telescope data. Basically, I want a rundown of every asteroid that made its closest pass in the last seven days—when it came by, how far it was, how fast it was going, how big it is, and whether it’s officially considered hazardous. Then, for each one, flag if an M-class (or stronger) flare popped off within about a day of its flyby, since that could’ve messed up observations.\n\nOnce we’ve got that list, I’m especially interested in the three most dangerous candidates—give me a handful of concrete orbit facts for each (like key numbers about their path), plus a roughly 200-word style summary of their discovery history. I’m going to pull all this together into a report, so I really need precise figures and real-source info—not just vague descriptions. Can you dig that up for me?",
+          "dependency_analysis": "Natural tool chains: get_asteroids_feed → get_asteroid_lookup produces detailed asteroid parameters. Parallel retrieval: get_solar_flare runs concurrently to gather solar flare events. Cross-server dependency: NASA Data outputs (asteroid names and approach dates) feed into Wikipedia:search_wikipedia queries. Wikipedia:get_article output is then consumed by extract_key_facts and summarize_article_section. Critical decision points: determining observational challenges by matching flare magnitude ≥ M within ±1 day of approach; filtering and ranking asteroids by estimated diameter and challenge flag. Sequential steps: feed → lookup → flare retrieval → matching logic → ranking → Wikipedia search → article fetch → fact extraction and section summarization. Parallel vs sequential: solar flare retrieval parallel to asteroid lookups; Wikipedia calls parallel across the top three asteroids. Cross-validation: hazard and flare matching validate potential observation disruptions. Iterative refinement: initial asteroid list refined by challenge flag and size ranking before deeper Wikipedia analysis.",
+          "distraction_servers": [
+            "Call for Papers",
+            "Context7",
+            "Google Maps",
+            "Huge Icons",
+            "NixOS",
+            "OKX Exchange",
+            "OSINT Intelligence",
+            "Paper Search",
+            "Reddit",
+            "Scientific Computing"
+          ]
+        }
+      ],
+      "servers": [
+        "Wikipedia",
+        "NASA Data"
+      ],
+      "combination_name": "Knowledge Explorer",
+      "combination_type": "two_server_combinations"
+    },
+    {
+      "server_name": "Google Maps+National Parks",
+      "tasks": [
+        {
+          "task_id": "google_maps_national_parks_000",
+          "task_description": "Plan a 3-day hiking and waterfall-viewing trip during the upcoming week for a group starting in Denver, CO. 1) Use Google Maps:maps_geocode to convert “Denver, CO” into latitude/longitude. 2) Use National Parks:findParks with stateCode=\"CO,UT,WY\" and activities=\"hiking\" to list candidate parks. 3) For each parkCode returned, call National Parks:getParkDetails to obtain the park’s coordinates. 4) For each park’s coordinates, call Google Maps:search_nearby with keyword=\"waterfall viewpoint\", radius=10000 m, minRating=4.0 to find nearby waterfall viewpoints. 5) For each waterfall placeId, call Google Maps:get_place_details to collect detailed ratings and verify it meets the minimum rating. 6) Use Google Maps:maps_distance_matrix with origins set to Denver’s coordinates and destinations set to each park’s coordinates (mode=\"driving\") to calculate driving durations; filter out parks with duration greater than 5 hours. 7) For remaining parkCodes, call National Parks:getAlerts to exclude any park with active closure alerts. 8) For still-valid parkCodes, call National Parks:getVisitorCenters and confirm at least one visitor center is open at 12:00 PM local time on any day during the upcoming week. 9) For those parks, call National Parks:getCampgrounds to confirm at least one campground is available. 10) Rank the remaining parks by the highest waterfall viewpoint rating obtained earlier, and select the top 2 parks. 11) For each selected park, take its campground(s) and compute distances from the campground to its top-rated waterfall viewpoint using Google Maps:maps_distance_matrix; pick the campground closest to that viewpoint. 12) For each selected campground, generate turn-by-turn directions from Denver, CO to the campground using Google Maps:maps_directions with departure_time=\"immediate\" and mode=\"driving\". 13) For each chosen campground location, call Google Maps:maps_elevation to obtain elevation data. 14) Produce a JSON itinerary listing for each of the two parks: park name, waterfall viewpoint name and rating, chosen campground name and amenities, driving distance and duration from Denver, turn-by-turn directions, and campground elevation.",
+          "fuzzy_description": "Hey, I’m trying to nail down a three-day hiking and waterfall road trip next week, starting from Denver. Ideally I want parks within about a five-hour drive where there’s at least one waterfall viewpoint rated around four stars or higher within roughly 10 km of the park’s core, no active closure alerts, a visitor center open around lunchtime for any last-minute trail info, and at least one campsite with vacancies. Could you pick the two best parks that check all those boxes, tell me the waterfall names and their ratings, point out which campground sits closest to each top waterfall, give me the drive distance and time from Denver, step-by-step directions if we head out right now, and even the elevation at the campsite? I really need actual numbers on ratings, distances, availability—nothing vague—so I can lock in our reservations.\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "• maps_geocode → provides Denver coordinates as the origin for distance and directions tools.  \n• findParks → initial park list (parkCode) → getParkDetails to fetch each park’s lat/long (cross-server: NPS → Google Maps).  \n• getParkDetails output → used by search_nearby (Google Maps) to find waterfall viewpoints; ensures proper centering for local searches.  \n• search_nearby results → get_place_details → confirm and compare ratings; drives ranking and filtering of parks.  \n• parks’ coordinates + Denver coordinates → maps_distance_matrix → decision point: remove parks >5 hours drive.  \n• Remaining parkCodes → getAlerts → conditional branch: remove if any active closure alerts.  \n• Further remaining parkCodes → getVisitorCenters → conditional check: require at least one center open at midday in the upcoming week.  \n• Qualified parks → getCampgrounds → require at least one available campsite.  \n• Decision point: rank by waterfall rating → select top 2 parks.  \n• For each selected park: campground list + viewpoint coordinates → maps_distance_matrix to choose closest campground (nested dependency).  \n• Final steps for each campground: maps_directions for route planning, maps_elevation for site elevation.  \n• Sequence enforces deep chains, cross-validation between NPS and Google Maps data, multiple decision filters, parallel search → sequential refinement → final itinerary generation.",
+          "distraction_servers": [
+            "BioMCP",
+            "Call for Papers",
+            "Context7",
+            "FruityVice",
+            "Game Trends",
+            "Huge Icons",
+            "Metropolitan Museum",
+            "NixOS",
+            "OpenAPI Explorer",
+            "Paper Search"
+          ]
+        }
+      ],
+      "servers": [
+        "Google Maps",
+        "National Parks"
+      ],
+      "combination_name": "Travel Navigation",
+      "combination_type": "two_server_combinations"
+    },
+    {
+      "server_name": "Google Maps+National Parks",
+      "tasks": [
+        {
+          "task_id": "google_maps_national_parks_001",
+          "task_description": "Plan a detailed 5-day camping and exploration itinerary for the optimal national park located within 200 km of Denver, Colorado. The agent must:\n1. Use Google Maps:maps_geocode to convert “Denver, Colorado” into coordinates.\n2. Use National Parks:findParks to list all parks in stateCode=“CO” offering hiking and camping.\n3. For each park, call National Parks:getParkDetails to retrieve its main entrance coordinates.\n4. Use Google Maps:maps_distance_matrix (mode=driving) with origin=Denver coordinates and each park entrance to compute driving distances and durations.\n5. Filter to parks within 200 km driving distance and select the single park with the shortest drive time.\n6. For the chosen park:\n   a. Call National Parks:getParkDetails again to capture full description, boundaries, and official name.\n   b. Call National Parks:getAlerts (limit=10) to retrieve current alerts.\n   c. Call National Parks:getEvents for events in the upcoming 7 days.\n   d. Call National Parks:getVisitorCenters to list visitor centers and their operating hours.\n   e. Call National Parks:getCampgrounds to list all campgrounds in the park.\n7. From the campground list, pick the three whose geographic locations maximize elevation spread:\n   a. Use Google Maps:maps_elevation to fetch elevation for each campground’s latitude/longitude.\n   b. Rank campgrounds by the difference between their elevation and the lowest-elevation campground; select the top three.\n8. For each of the three selected campgrounds:\n   a. Use Google Maps:maps_reverse_geocode to identify the nearest town center.\n   b. Use Google Maps:search_nearby with center=that town’s coordinates, keyword=“restaurant”, radius=10000 m, openNow=true, minRating=4 to find up to five high-rated restaurants.\n   c. For the single highest-rated restaurant, compute driving distance and duration from the campground via Google Maps:maps_distance_matrix.\n   d. Retrieve turn-by-turn directions for that route via Google Maps:maps_directions.\n9. Construct a 5-day itinerary JSON with:\n   – park: parkCode, name, description, coordinates, alerts, events, visitorCenters\n   – campgrounds: array of three objects, each with name, coordinates, elevation, nearestTown, topRestaurant (name, rating, distance, duration, directions steps)\n   – itinerary: day-by-day schedule (Day 1 through Day 5), assigning one campground per day (Days 1–3 at each of the three selected campgrounds, Days 4–5 at a chosen visitor center base), with morning/afternoon/evening activities (arrival, visitor center tours, dining at the selected restaurant, and any scheduled event)\n\nThe output must be a single JSON object matching the above structure. All relative time spans should refer to “upcoming 7 days.”",
+          "fuzzy_description": "I’ve been itching to head out of Denver for a 5-day camping trip sometime in the next week, but I’m kind of torn on which national park makes the most sense. Ideally it’s no more than about a 200 km drive, offers solid hiking and camping, and has a visitor center where I can catch any talks or events going on that week. I’m also really curious about spending nights at camp spots that vary in elevation—maybe one high ridge, one mid-level meadow and one lower valley—just to see how the landscape and weather change. \n\nOn top of that, I don’t want to be stuck cooking at every stop, so it’d be awesome to know what town is nearest each campsite and where I can grab a good meal—not just any greasy spoon, but something rated at least four stars, and I need to know how long the drive is and exactly how to get there. In the middle of the trip I’d like to base myself at a visitor center for a couple of nights to break things up and dive into any ranger-led programs.\n\nCould you put together a day-by-day itinerary for the upcoming week that does all of that—picks the best park within a reasonable drive from Denver, highlights three campsites that maximize elevation differences, flags any alerts or events happening, finds the nearest town restaurants with ratings and drive times, and then lays out morning/afternoon/evening plans for each of the five days? I really need actual data on this—can’t go wandering off with just vague advice. Whatever you find, please back it up with real numbers or solid sources, okay?\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "Inherent Tool Chains:\n- maps_geocode → provides coordinates for Denver → required by maps_distance_matrix and search_nearby.\n- findParks → yields parkCodes → used by getParkDetails, getAlerts, getEvents, getVisitorCenters, getCampgrounds.\n- getParkDetails → yields park entrance coordinates → input to maps_distance_matrix.\n- maps_distance_matrix → filters parks by distance → determines chosen park.\n- getCampgrounds → yields campground coordinates → input to maps_elevation and maps_reverse_geocode.\n- maps_elevation → provides elevation data → used to rank campgrounds.\n- maps_reverse_geocode → provides nearest town → center for search_nearby.\n- search_nearby → yields restaurants → select top candidate → used by maps_distance_matrix and maps_directions.\n\nScenario-Based Dependencies:\n- Decision Point 1: After computing drive times, select only parks ≤200 km and pick the single shortest drive.\n- Decision Point 2: From all campgrounds, compute elevation spread and choose top three with greatest elevation difference.\n- Conditional Workflow: If no restaurants meet minRating=4, fallback to restaurants with minRating=3 (not required if at least one exists).\n- Parallel vs Sequential: Steps 7–8 for each campground can be executed in parallel once campgrounds are ranked; earlier steps must be sequential.\n\nCross-Server Dependencies:\n- Google Maps output (Denver coords, distances) influences National Parks selection by distance.\n- National Parks:getCampgrounds outputs feed back into Google Maps tools (elevation, reverse_geocode, distance_matrix, directions).\n- Combined data from both servers must be cross-validated (e.g., ensure campground coords match park boundaries and that restaurant distances align with drive times).\n\nThis chain ensures the agent cannot skip any tool, as each output drives the next selection, filtering, or branching logic.",
+          "distraction_servers": [
+            "Bibliomantic",
+            "Car Price Evaluator",
+            "DEX Paprika",
+            "Game Trends",
+            "Medical Calculator",
+            "Metropolitan Museum",
+            "Movie Recommender",
+            "OKX Exchange",
+            "Paper Search",
+            "Reddit"
+          ]
+        }
+      ],
+      "servers": [
+        "Google Maps",
+        "National Parks"
+      ],
+      "combination_name": "Travel Navigation",
+      "combination_type": "two_server_combinations"
+    },
+    {
+      "server_name": "NixOS+Context7",
+      "tasks": [
+        {
+          "task_id": "nixos_context7_000",
+          "task_description": "You are tasked with designing a fully reproducible Nix-based development environment for a Python web application that uses Python 3.10, Flask, Redis, and Docker. Your environment must work on NixOS (channel 25.05), Home Manager, and nix-darwin (macOS). Finally, fetch documentation snippets for the Flask library from Context7. Produce a single JSON summary with: channel metadata, overall stats, chosen package names with NixOS version and commit hashes, Home Manager configuration options, nix-darwin configuration options, chosen NixOS flake metadata (or fallback if none), and a 500-token snippet of Flask routing documentation.\n\nSteps to follow:\n1. Call nixos_channels and pick the channel \"25.05\". 2. Call nixos_stats for channel \"25.05\". 3. For each of the four core components (\"python3\", \"flask\", \"redis\", \"docker\"):  \n   a. Call nixos_search(query=<name>, search_type=\"packages\", limit=1, channel=\"25.05\").  \n   b. Call nixos_info(name=<exact package name from search>, type=\"package\", channel=\"25.05\").  \n   c. For the \"python3\" package, verify commit hash: call nixhub_find_version(package_name=\"python3\", version=\"3.10.5\"). If not found, call nixhub_package_versions(package_name=\"python3\", limit=10) to retrieve latest history.  \n4. Call home_manager_search(query=\"programs.python\", limit=5) and home_manager_options_by_prefix(option_prefix=\"programs.docker\").  \n5. Call home_manager_stats.  \n6. Call darwin_search(query=\"programs.python\", limit=5) and darwin_options_by_prefix(option_prefix=\"programs.docker\").  \n7. Call darwin_stats.  \n8. Call nixos_flakes_stats, then nixos_flakes_search(query=\"poetry\", limit=10). If at least one flake is returned, select the top result and include its metadata; otherwise note that no poetry flake was found and proceed without.  \n9. Use resolve-library-id(libraryName=\"flask\") to get a Context7-compatible library ID, then get-library-docs(context7CompatibleLibraryID=<returned ID>, topic=\"routing\", tokens=500).  \n10. Compile a JSON report containing:  \n   • channel: name and status  \n   • channel stats: total packages/options counts  \n   • for each core component: NixOS package name, version, NixHub commit hash  \n   • Home Manager: selected options and descriptions  \n   • nix-darwin: selected options and descriptions  \n   • flake: chosen flake name, owner, description (or fallback note)  \n   • Flask routing docs snippet (max 500 tokens)",
+          "fuzzy_description": "I’ve been banging my head trying to get a Flask-based web app running in a totally reproducible way across our team’s setups. We need Python 3.10, Flask itself, Redis, and Docker all coming from the same Nix channel (we’re on 25.05), plus config snippets that play nicely with Home Manager on Linux laptops and nix-darwin on macOS. On top of that, my lead wants a tiny excerpt—like 500 words or so—on how Flask routing works to stick in our README. \n\nWhat would really help is if you could pull together:\n• A quick snapshot of the 25.05 channel (how big it is, broadly speaking)  \n• The exact Nix package names and versions for python3, flask, redis, and docker, ideally with the commit or revision that pins them  \n• The main Home Manager options we should set for Python and Docker, with their descriptions  \n• The equivalent nix-darwin settings so my mac-using teammate can just drop them in  \n• Whether there’s a Poetry flake out there we can lean on (or a note if none exist)  \n• And finally, about 500 tokens’ worth of official Flask routing docs so I can paste it straight into our project guide  \n\nIf you could wrap all of that up as a single JSON I can hand off to my team, that’d save me hours of guesswork—and give me the hard data I need to prove this setup will actually work everywhere. Thanks!\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "• NixOS channel selection chain: nixos_channels → nixos_stats (sequential).  \n• Core package chain (per component): nixos_search → nixos_info → (conditional) nixhub_find_version or nixhub_package_versions. Version info from nixos_info informs NixHub calls.  \n• Home Manager chain: home_manager_search → home_manager_options_by_prefix → home_manager_stats (sequential, parallel within HM).  \n• nix-darwin chain: darwin_search → darwin_options_by_prefix → darwin_stats (sequential, parallel within Darwin).  \n• Flake chain: nixos_flakes_stats → nixos_flakes_search → conditional branch (if no poetry flake, skip metadata).  \n• Context7 chain: resolve-library-id → get-library-docs (sequential, cross-server dependency: package name “flask” from NixOS -> Context7).  \n• Cross-validation: Python version from nixos_info is validated against NixHub commit history; missing versions trigger alternative historical lookup.  \n• Decision points: missing poetry flake triggers fallback; missing Python commit triggers version history lookup.  \n• Data flow: outputs from NixOS tools feed parameters into NixHub and Context7, and feed into Home Manager and Darwin searches to ensure consistent naming across all layers.  \n• Parallel vs sequential: Home Manager and Darwin searches can run in parallel after core NixOS package resolution; Context7 docs retrieval must wait for package name resolution.  \n• Cross-server: NixOS outputs (package names, versions) drive NixHub and Context7 queries, ensuring unified environment definition across Linux and macOS configuration layers.",
+          "distraction_servers": [
+            "Bibliomantic",
+            "Call for Papers",
+            "Car Price Evaluator",
+            "FruityVice",
+            "Hugging Face",
+            "NASA Data",
+            "National Parks",
+            "OSINT Intelligence",
+            "Scientific Computing",
+            "Unit Converter"
+          ]
+        }
+      ],
+      "servers": [
+        "NixOS",
+        "Context7"
+      ],
+      "combination_name": "Dev Environment",
+      "combination_type": "two_server_combinations"
+    },
+    {
+      "server_name": "NixOS+Context7",
+      "tasks": [
+        {
+          "task_id": "nixos_context7_001",
+          "task_description": "Audit and document the MongoDB service setup on NixOS (unstable) and fetch its upstream indexing documentation. Perform the following steps in sequence:\n\n1. List all available NixOS channels and confirm the unstable channel is active.\n2. Retrieve statistics for the unstable channel (package and option counts).\n3. Search for the ‘mongodb’ package in the unstable channel and identify the exact package name and latest version.\n4. Get detailed info on the ‘mongodb’ package to extract its version string.\n5. Use NixHub to find the commit hash corresponding to that exact MongoDB version for reproducible builds.\n6. Browse Home Manager options with the prefix ‘services.mongodb’ to determine how to enable the MongoDB service in home configurations.\n   • If no Home Manager options are found, fall back to listing nix-darwin options with the same prefix.\n7. Resolve the Context7 library ID for ‘mongodb’ to locate the official MongoDB documentation endpoint.\n8. Fetch up to 2,000 tokens of the ‘indexing’ section from the MongoDB docs via Context7.\n\nExpected output format:\n- A summary table of channels and the unstable channel status.\n- Unstable channel stats (total packages/options).\n- The exact MongoDB package name and version.\n- The NixHub commit hash for that version.\n- A list of available Home Manager options for ‘services.mongodb.enable’ (or fallback nix-darwin options).\n- The Context7 library ID chosen and a 2000-token excerpt of the ‘indexing’ topic from MongoDB docs.",
+          "fuzzy_description": "Hey, I’m setting up a NixOS box on the unstable branch for a project that needs MongoDB, but I’m not even 100% sure I’m on unstable right now. I’d love to double-check which channels are active and get a feel for how big the unstable channel is these days (packages and options count, roughly). After that, I want to know exactly which MongoDB package is shipped there today, grab its precise version string, and pin down the commit hash behind that build so I can keep things fully reproducible. \n\nOnce I know that, I need to enable MongoDB via Home Manager—though if there isn’t a `services.mongodb` option there I might have to fall back to checking nix-darwin. And finally, I really need a solid excerpt (around two thousand tokens or so) from the official MongoDB docs on indexing. \n\nI can’t walk into a planning meeting with “it should work”—I need actual numbers, commands or logs, commit IDs, and a real doc snippet. Can you pull all that together?\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "We build a linear, multi-server chain with decision points and cross-validation:\n\n1. NIXOS SERVER: Start with nixos_channels() to enumerate channels → feeds into step 2.\n2. NIXOS SERVER: nixos_stats(channel=\"unstable\") → confirms unstable channel viability and provides context for search volume.\n3. NIXOS SERVER: nixos_search(query=\"mongodb\", search_type=\"packages\", channel=\"unstable\") → returns candidate package names → choose ‘mongodb’.\n4. NIXOS SERVER: nixos_info(name=\"mongodb\", type=\"package\", channel=\"unstable\") → extracts exact version string for downstream use.\n5. NIXHUB SERVER: nixhub_find_version(package_name=\"mongodb\", version=<version from step 4>) → yields commit hash for reproducibility.\n6. HOME MANAGER SERVER: home_manager_options_by_prefix(option_prefix=\"services.mongodb\") → lists how to enable MongoDB in Home Manager.\n   • Decision Point: if output is empty → go to step 7; else record Home Manager options and skip step 7.\n7. DARWIN SERVER: darwin_options_by_prefix(option_prefix=\"services.mongodb\") → fallback listing of nix-darwin service options.\n8. CONTEXT7 SERVER: resolve-library-id(libraryName=\"mongodb\") → returns Context7-compatible library ID (e.g. '/mongodb/docs').\n9. CONTEXT7 SERVER: get-library-docs(context7CompatibleLibraryID=<ID from step 8>, topic=\"indexing\", tokens=2000) → retrieves the docs excerpt.\n\nKey points:\n- Strict sequencing: each step’s output provides inputs for the next.\n- Conditional branch between Home Manager and nix-darwin listings ensures coverage across both Nix-based configuration tools.\n- Cross-server dependency: the version discovered on NixOS drives the NixHub query; the package name drives Context7 resolution.\n- Provides cross-validation of service options across Home Manager and nix-darwin before fetching external docs.",
+          "distraction_servers": [
+            "BioMCP",
+            "Call for Papers",
+            "FruityVice",
+            "Google Maps",
+            "Hugging Face",
+            "Math MCP",
+            "OKX Exchange",
+            "OSINT Intelligence",
+            "Scientific Computing",
+            "Wikipedia"
+          ]
+        }
+      ],
+      "servers": [
+        "NixOS",
+        "Context7"
+      ],
+      "combination_name": "Dev Environment",
+      "combination_type": "two_server_combinations"
+    },
+    {
+      "server_name": "Google Maps+Weather Data",
+      "tasks": [
+        {
+          "task_id": "google_maps_weather_data_000",
+          "task_description": "You are planning a one-day walking tour in Seattle, starting from your hotel in Downtown Seattle. You must use Google Maps and Weather Data tools to build a complete itinerary, select the optimal travel day based on forecast, and verify routes by both walking and driving. Follow these steps and return a final JSON with sections: “coffee_shops” (top 3 with name, address, rating), “selected_day” (date and weather summary), “current_weather” (temperature, conditions, humidity, wind), “itinerary” (ordered list of legs with origin, destination, mode, departure_time, duration), and “viewpoint” (formatted_address, elevation_meters):\n\n1. Geocode “Downtown Seattle” to get starting coordinates.\n2. Search nearby with keyword “Pike Place Market” within a 2000 m radius of those coordinates.\n3. Get place details for the Pike Place Market placeId.\n4. From the Pike Place coordinates, search nearby with keyword “coffee shop”, radius 500 m, minRating 4.5.  \n5. From that list, select the top 3 by rating and get place details for each.\n6. Use Weather Data search_locations_tool with query “Seattle” to confirm the city name.\n7. Call get_current_weather_tool and get_live_temp for “Seattle” to cross-validate current temperature and conditions.\n8. Call get_weather_forecast_tool for “Seattle” for the next 7 days. From the returned daily forecasts, pick the first day with zero precipitation probability and average temperature between 15 °C and 25 °C. If no day meets both, choose the day with the lowest precipitation probability.\n9. Geocode “Kerry Park viewpoint, Seattle” to get viewpoint coordinates.\n10. For the chosen travel day:\n   a. Get walking directions from your hotel (Downtown Seattle coords) to Pike Place Market, departing at 09:00 local time on that day.\n   b. Get walking directions from Pike Place Market to the highest-rated coffee shop, departing at 09:30 on that day.\n   c. Get walking directions from that coffee shop to Kerry Park viewpoint, departing at 10:00 on that day.\n11. Get a driving distance matrix from your hotel to Kerry Park viewpoint to compare driving duration.\n12. Get elevation for the Kerry Park viewpoint coordinates.\n13. Reverse geocode the viewpoint coordinates to obtain its formatted address.\n\nReturn a single JSON object with keys: “coffee_shops”, “selected_day”, “current_weather”, “itinerary”, and “viewpoint”.",
+          "fuzzy_description": "I’m heading to Seattle for just one day soon and staying right in downtown. I really want to start my morning at Pike Place Market, grab coffee at the highest-rated spot nearby, then finish up at that famous skyline overlook (you know, the one everyone snaps on Instagram). \n\nProblem is, I’m not sure which day in the next week will give me a dry window with temps around 15–25 °C. And I’d like to know what Seattle’s weather looks like right now, too—temperature, humidity, wind, all that. \n\nOnce we’ve nailed down the best day, could you sketch out a walking plan? Something like leaving my hotel around 9 am to Pike Place, then strolling over to the top coffee shop around 9:30, and then hiking up to Kerry Park by 10. I’d also love to see how those walking times compare to just driving straight from the hotel to Kerry Park, purely for kicks. And finally, what’s the exact address of that viewpoint and its elevation above sea level?\n\nI really need actual numbers and solid details—can’t go showing up with just guesses!\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "Inherent and scenario-based dependencies:\n- Geocoding → Nearby Search: maps_geocode('Downtown Seattle') provides coords for search_nearby('Pike Place Market').\n- Nearby Search → Place Details: search_nearby('coffee shop') yields placeIds used by get_place_details in parallel for top 3.\n- Geocode → Coordinates for viewpoint: maps_geocode('Kerry Park viewpoint, Seattle') feeds maps_elevation and maps_reverse_geocode.\n- Weather Data cross-server: search_locations_tool('Seattle') standardizes city name for get_current_weather_tool, get_live_temp and get_weather_forecast_tool.\n- Forecast → Decision point: select travel day based on precipitation and temperature thresholds; fallback to lowest precipitation day if needed.\n- Forecast → Directions parameters: chosen date sets departure_time ISO strings for maps_directions calls.\n- Directions → Verification: maps_distance_matrix(driving) cross-validates driving time to viewpoint alongside walking directions durations.\n- Parallel vs sequential: geocode→search_nearby→get_place_details chains are sequential; fetching details for 3 coffee shops runs in parallel; current weather and legacy live temp calls run in parallel; directions for each leg must run sequentially in itinerary order.\n- Cross-validation: current_weather_tool vs get_live_temp outputs are compared to ensure consistency.\n- Data flow: coords from geocode feed all mapping tools; forecast data feeds decision logic and parameters for directions; elevation and reverse_geocode feed final viewpoint info.\nUsing all Google Maps tools and all Weather Data tools creates a deep dependency chain and conditional branches around weather-based day selection.",
+          "distraction_servers": [
+            "Context7",
+            "DEX Paprika",
+            "FruityVice",
+            "Math MCP",
+            "Medical Calculator",
+            "NASA Data",
+            "National Parks",
+            "OSINT Intelligence",
+            "OpenAPI Explorer",
+            "Unit Converter"
+          ]
+        }
+      ],
+      "servers": [
+        "Google Maps",
+        "Weather Data"
+      ],
+      "combination_name": "Location Services",
+      "combination_type": "two_server_combinations"
+    },
+    {
+      "server_name": "Google Maps+Weather Data",
+      "tasks": [
+        {
+          "task_id": "google_maps_weather_data_001",
+          "task_description": "Using only the provided tools, plan a one-day food and sightseeing itinerary in downtown Seattle that includes:\n\n1. Morning coffee: find the top-rated cafe (rating ≥4.5) currently open within 1 km of “downtown Seattle.”\n2. Midday lunch: from that cafe’s location, find a restaurant (rating ≥4.0) within a 15-minute walk (≤1 km) that is open at 12:00 noon, and select the highest-rated one.\n3. Afternoon sightseeing: from the chosen restaurant’s location, find the two highest-rated tourist attractions (rating ≥4.5) within 2 km.\n4. Weather check: fetch today’s weather forecast for Seattle. If precipitation is forecasted, plan the afternoon sightseeing on foot; otherwise plan by bicycle.\n5. Directions: generate turn-by-turn directions for\n   a. the walking route from the cafe to the restaurant,\n   b. the afternoon route from the restaurant to attraction #1,\n   c. the afternoon route from attraction #1 to attraction #2,\n   using the chosen travel mode.\n6. Elevation analysis: get elevation for the cafe, restaurant, and both attractions, compute the elevation gain for each leg (cafe→restaurant, restaurant→attraction #1, attraction #1→attraction #2), and flag any segment with a gain >50 m.\n\nReturn a final itinerary in JSON with place names, addresses, ratings, opening hours at the relevant times, travel times, chosen travel mode, weather summary, directions steps, elevation values, and any elevation-gain warnings.",
+          "fuzzy_description": "Hey, I’m heading to Seattle this weekend with just one full day to explore downtown, and I’d love your help piecing together the perfect itinerary. I’d like to start my morning at a really top-rated coffee shop that’s actually open when I arrive—ideally within about a kilometer of the city center—and then around noon stroll over to the best lunch spot you can find within a 15-minute walk of that café. After lunch, I want to spend the afternoon hitting two must-see attractions, both highly rated and within a couple of kilometers of the restaurant.\n\nI’m also debating whether to walk or rent a bike for the afternoon, so could you check today’s weather forecast and recommend the best travel mode? And because I’m not a fan of brutal uphill battles, it’d be awesome if you could give me turn-by-turn directions for each leg and flag any climbs over roughly 50 meters in elevation. \n\nCould you send me a detailed plan—place names, addresses, ratings, opening hours at the times I need them, travel times, chosen travel mode, a quick weather summary, step-by-step directions, elevation numbers, and any warning about steep stretches? I really need solid numbers and facts, since I’m going to follow it exactly.\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "Key tool chains and data flow:\n• maps_geocode('downtown Seattle') → coords_center → search_nearby(center=coords_center, keyword='cafe', radius=1000, openNow=true, minRating=4.5) → cafe_list. Select top-rated cafe → get_place_details(placeId) to confirm hours and obtain full address and exact coordinates.\n\n• search_nearby(center=cafe_coords, keyword='restaurant', radius=1500, minRating=4.0) → restaurant_list. Parallel calls:\n  – maps_distance_matrix(origins=[cafe_address], destinations=restaurant_addresses, mode='walking') → distances & times → filter for ≤1000 m & ≤15 min\n  – get_place_details(placeId) for each candidate → operating hours → filter for open at 12:00\nSelect highest-rated valid restaurant → record its address & coords.\n\n• search_nearby(center=restaurant_coords, keyword='tourist attraction', radius=2000, minRating=4.5) → attraction_list. Select top two by rating → get_place_details for each → yields full address & coordinates.\n\nCross-server dependency & decision point:\n• get_weather_forecast_tool(city='Seattle', days=1) → forecast_data. If forecast_data includes precipitation, set travel_mode='walking'; else travel_mode='bicycling'.\n\n• maps_directions(origin=cafe_address, destination=restaurant_address, mode='walking') for morning; then\n  maps_directions(origin=restaurant_address, destination=attraction1_address, mode=travel_mode) and\n  maps_directions(origin=attraction1_address, destination=attraction2_address, mode=travel_mode).\n\n• maps_elevation(locations=[cafe_coords, restaurant_coords, attraction1_coords, attraction2_coords]) → elevations. Compute elevation gain per leg and flag any gain >50 m.\n\nSequential requirements:\n1→2→3→4→5→6. Parallel branches within step 2 for distance_matrix and get_place_details. Cross-validation: hours from get_place_details vs openNow filter. Weather tool output determines travel_mode for maps_directions. All data flows are strictly from one tool’s output into the next tool’s input, ensuring no external dependencies.",
+          "distraction_servers": [
+            "Bibliomantic",
+            "BioMCP",
+            "Car Price Evaluator",
+            "FruityVice",
+            "Huge Icons",
+            "Movie Recommender",
+            "NixOS",
+            "OKX Exchange",
+            "Paper Search",
+            "Scientific Computing"
+          ]
+        }
+      ],
+      "servers": [
+        "Google Maps",
+        "Weather Data"
+      ],
+      "combination_name": "Location Services",
+      "combination_type": "two_server_combinations"
+    }
+  ]
+}

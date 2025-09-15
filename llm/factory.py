@@ -9,6 +9,7 @@ Classes:
 """
 
 import os
+import requests
 from typing import Dict, Any
 from openai import AsyncOpenAI, AsyncAzureOpenAI
 from .provider import LLMProvider
@@ -55,6 +56,27 @@ class LLMFactory:
     """
     
     @staticmethod
+    def _detect_vllm_model(base_url: str) -> str:
+        """Detect the model name served by vllm by querying /v1/models endpoint.
+        
+        Args:
+            base_url: The base URL of the vllm server
+            
+        Returns:
+            The model name served by vllm, or "auto" if detection fails
+        """
+        try:
+            models_url = f"{base_url}/models"
+            response = requests.get(models_url, timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("data") and len(data["data"]) > 0:
+                    return data["data"][0]["id"]
+        except Exception:
+            pass
+        return "auto"
+    
+    @staticmethod
     def get_model_configs() -> Dict[str, ModelConfig]:
         """Get all available model configurations from environment variables.
         
@@ -66,47 +88,56 @@ class LLMFactory:
         """
         configs = {}
         
-        # Azure OpenAI models
-        if os.getenv("AZURE_OPENAI_API_KEY") and os.getenv("AZURE_OPENAI_ENDPOINT"):
+        # OpenAI models
+        if os.getenv("OPENAI_API_KEY"):
             configs["o4-mini"] = ModelConfig(
                 name="o4-mini",
-                provider_type="azure",
-                api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-                endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-                deployment_name="o4-mini"
+                provider_type="openai",
+                api_key=os.getenv("OPENAI_API_KEY"),
+                model_name="o4-mini-2025-04-16"
             )
+
+        # Azure OpenAI models
+        # if os.getenv("AZURE_OPENAI_API_KEY") and os.getenv("AZURE_OPENAI_ENDPOINT"):
+        #     configs["o4-mini"] = ModelConfig(
+        #         name="o4-mini",
+        #         provider_type="azure",
+        #         api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+        #         endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        #         deployment_name="o4-mini"
+        #     )
             
-            configs["gpt-4o"] = ModelConfig(
-                name="gpt-4o",
-                provider_type="azure",
-                api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-                endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-                deployment_name="gpt-4o"
-            )
+        #     configs["gpt-4o"] = ModelConfig(
+        #         name="gpt-4o",
+        #         provider_type="azure",
+        #         api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+        #         endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        #         deployment_name="gpt-4o"
+        #     )
             
-            configs["gpt-4o-mini"] = ModelConfig(
-                name="gpt-4o-mini",
-                provider_type="azure",
-                api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-                endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-                deployment_name="gpt-4o-mini"
-            )
+        #     configs["gpt-4o-mini"] = ModelConfig(
+        #         name="gpt-4o-mini",
+        #         provider_type="azure",
+        #         api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+        #         endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        #         deployment_name="gpt-4o-mini"
+        #     )
             
-            configs["o3"] = ModelConfig(
-                name="o3",
-                provider_type="azure",
-                api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-                endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-                deployment_name="o3"
-            )
+        #     configs["o3"] = ModelConfig(
+        #         name="o3",
+        #         provider_type="azure",
+        #         api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+        #         endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        #         deployment_name="o3"
+        #     )
         
-            configs["gpt-5"] = ModelConfig(
-                name="gpt-5",
-                provider_type="azure",
-                api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-                endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-                deployment_name="gpt-5"
-            )
+        #     configs["gpt-5"] = ModelConfig(
+        #         name="gpt-5",
+        #         provider_type="azure",
+        #         api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+        #         endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        #         deployment_name="gpt-5"
+        #     )
         
         # OpenRouter models
         if os.getenv("OPENROUTER_API_KEY"):
@@ -315,6 +346,38 @@ class LLMFactory:
                     model_name=os.getenv(f"{env_prefix}_MODEL")
                 )
         
+        # Generic Hugging Face model configuration
+        if os.getenv("HUGGINGFACE_API_KEY") or os.getenv("HUGGINGFACE_BASE_URL"):
+            base_url = os.getenv("HUGGINGFACE_BASE_URL", "http://localhost:8000/v1")
+            model_name = os.getenv("HUGGINGFACE_MODEL")
+            if not model_name:
+                # Auto-detect model name from vllm server
+                model_name = LLMFactory._detect_vllm_model(base_url)
+            
+            configs["huggingface"] = ModelConfig(
+                name="huggingface",
+                provider_type="openai_compatible",
+                api_key=os.getenv("HUGGINGFACE_API_KEY", "dummy-key"),
+                base_url=base_url,
+                model_name=model_name
+            )
+        
+        # Separate Hugging Face judge model configuration
+        if os.getenv("HUGGINGFACE_JUDGE_BASE_URL"):
+            judge_base_url = os.getenv("HUGGINGFACE_JUDGE_BASE_URL")
+            judge_model_name = os.getenv("HUGGINGFACE_JUDGE_MODEL")
+            if not judge_model_name and judge_base_url:
+                # Auto-detect judge model name from vllm server
+                judge_model_name = LLMFactory._detect_vllm_model(judge_base_url)
+            
+            configs["huggingface-judge"] = ModelConfig(
+                name="huggingface-judge",
+                provider_type="openai_compatible",
+                api_key=os.getenv("HUGGINGFACE_JUDGE_API_KEY", "dummy-key"),
+                base_url=judge_base_url,
+                model_name=judge_model_name
+            )
+        
         return configs
     
     @staticmethod
@@ -334,7 +397,17 @@ class LLMFactory:
             ValueError: If provider type is not supported
         """
         
-        if model_config.provider_type == "azure":
+        if model_config.provider_type == "openai":
+            client = AsyncOpenAI(
+                api_key=model_config.config["api_key"]
+            )
+            return LLMProvider(
+                client=client,
+                deployment_name=model_config.config["model_name"],
+                provider_type="openai"
+            )
+            
+        elif model_config.provider_type == "azure":
             client = AsyncAzureOpenAI(
                 azure_endpoint=model_config.config["endpoint"],
                 api_key=model_config.config["api_key"],

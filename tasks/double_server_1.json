@@ -1,0 +1,297 @@
+{
+  "generation_info": {
+    "status": "completed"
+  },
+  "server_tasks": [
+    {
+      "server_name": "DEX Paprika+OKX Exchange",
+      "tasks": [
+        {
+          "task_id": "dex_paprika_okx_exchange_000",
+          "task_description": "Conduct a multi-network arbitrage analysis for the token 'UNI' by executing the following steps:\n\n1. Call DEX Paprika:getNetworks to confirm supported networks.\n2. Search for the token 'UNI' across all networks using DEX Paprika:search with {\"query\": \"UNI\"}. Extract the tokenAddress for each network from the search results.\n3. Filter down to exactly the 'ethereum', 'polygon', and 'binance-smart-chain' networks and their corresponding UNI tokenAddress values.\n4. For each of these three networks:\n   a. Call DEX Paprika:getTokenDetails with the network and tokenAddress to confirm token metadata.\n   b. Call DEX Paprika:getTokenPools with network, tokenAddress, page=0, limit=5, sort='desc', orderBy='volume_usd' to retrieve the top 5 liquidity pools trading UNI.\n   c. For each of the top 5 pools returned:\n      i. Call DEX Paprika:getPoolDetails with network and poolAddress to fetch current pool price_usd.\n     ii. Call DEX Paprika:getPoolOHLCV with network, poolAddress, start='past 7 days', interval='24h', limit=7 to retrieve daily OHLCV for the past week.\n    iii. In parallel, call OKX Exchange:get_price with {\"instrument\": \"UNI-USDT\"} to get the latest spot price, and OKX Exchange:get_candlesticks with {\"instrument\": \"UNI-USDT\", \"bar\": \"1D\", \"limit\": 7} to retrieve the last 7 daily candlesticks.\n     iv. Compute the average pool close price from the 7 OHLCV points and the average OKX close price from candlesticks. Calculate the average percentage price difference between each pool and OKX.\n      v. If the average percentage price difference exceeds 2%, call DEX Paprika:getPoolTransactions with network, poolAddress, page=0, limit=20 to gather the 20 most recent transactions for liquidity depth analysis.\n5. Aggregate all findings into a JSON table with fields: network, poolAddress, DEX identifier, average pool price (USD), average OKX price (USD), average percentage difference, and average swap size in USD (if transaction analysis was triggered).\n6. Highlight all pools where the average percentage difference is above 2%.",
+          "fuzzy_description": "Hey, I’m looking into whether there’s any easy arbitrage for UNI right now on its main chains—Ethereum, Polygon, and BSC—over the past week. I know some pools on those networks can trade a bit above or below what UNI goes for on OKX’s UNI-USDT pair, but I’m not sure how big those gaps really are. Could you pull the biggest UNI pools by volume on each chain, figure out their average daily closing price for the last seven days, and then compare that to OKX’s average daily close? If any of those pools are drifting more than about 2% from OKX, I’d also like to see what kind of trade sizes or liquidity they’ve actually seen recently so I can tell if there’s enough depth to make a move. I need real numbers—average pool price, average OKX price, percent differences, and any swap-size or volume details for the outliers—because I’m trying to build a quick, data-driven arbitrage playbook. Thanks!\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "Inherent dependencies: DEX Paprika:getNetworks must run first to list network IDs, which are then used by DEX Paprika:search to find UNI tokenAddress across networks. The tokenAddress outputs feed into getTokenDetails and getTokenPools. getTokenPools returns poolAddress values that sequentially feed getPoolDetails, getPoolOHLCV, and—conditionally based on price gap—getPoolTransactions. Parallel cross-validation: for each pool, OKX Exchange:get_price and get_candlesticks run in parallel using the 'UNI-USDT' instrument. Data flow: network→tokenAddress→pool list→pool details & OHLCV→computed price difference→conditional transaction analysis. Key decision points: filtering to three specific networks; selecting top 5 pools by volume_usd; gating getPoolTransactions calls if average pool vs OKX price difference >2%. Cross-server dependency: pool prices and historical OHLCV from DEX Paprika are compared against live and historical OKX data to identify arbitrage gaps.",
+          "distraction_servers": [
+            "Bibliomantic",
+            "BioMCP",
+            "Car Price Evaluator",
+            "Game Trends",
+            "Math MCP",
+            "NixOS",
+            "Paper Search",
+            "Scientific Computing",
+            "Unit Converter",
+            "Wikipedia"
+          ]
+        }
+      ],
+      "servers": [
+        "DEX Paprika",
+        "OKX Exchange"
+      ],
+      "combination_name": "Crypto Trading",
+      "combination_type": "two_server_combinations"
+    },
+    {
+      "server_name": "DEX Paprika+OKX Exchange",
+      "tasks": [
+        {
+          "task_id": "dex_paprika_okx_exchange_001",
+          "task_description": "You are tasked with performing a deep liquidity and price correlation analysis for the leading Ethereum-based DEX pool and cross-validating its price dynamics against OKX market data.  Follow these steps exactly:\n\n1. Retrieve high-level DEX ecosystem statistics.\n2. List all supported networks and confirm Ethereum is available.\n3. On Ethereum, fetch all DEXes and identify the one with the highest total pool count.\n4. For that DEX, retrieve its pools sorted by USD volume (descending) and select the top pool.\n5. Get detailed information for that top pool, including the two constituent token addresses.\n6. For each token in the pool, fetch full token details (symbol, decimals).\n7. Pull the pool’s OHLCV history for the past 30 days with 24h intervals.\n8. On OKX Exchange, determine the appropriate instrument symbol by combining the two token symbols (e.g., TOKENA-TOKENB).\n9. Fetch 1-day interval candlesticks for that instrument over the past 30 days.\n10. Compute the Pearson correlation coefficient between the pool’s closing price (from OHLCV) and OKX’s closing price series.\n11. Identify any days where the price divergence (absolute difference) exceeded 2% of the OKX closing price.\n12. Retrieve the latest 10 transactions for the pool and summarize the volume and transaction types per day.\n\nProduce a JSON report containing:\n- ecosystemStats: result of step 1\n- chosenNetwork: network ID used\n- chosenDex: DEX ID and name with highest pool count\n- topPool: address, volume_usd, token0, token1\n- tokenDetails: array of both token detail objects\n- poolOhlcv: full 30-day OHLCV array\n- okxCandles: full 30-day candlestick array\n- priceCorrelation: correlation coefficient\n- divergenceDays: array of dates with >2% divergence and percent difference\n- recentTransactions: array of the 10 transaction objects grouped by date with totals",
+          "fuzzy_description": "Hey, I’ve been digging into DeFi for a project and I’m trying to figure out if a major liquidity pool on Ethereum really moves in step with the same pair on OKX. I’d love to get a feel for the overall DEX scene (make sure Ethereum’s in there), see which Ethereum exchange has the most pools, and then home in on that single biggest pool by dollar volume. Once we’ve got that, I want the token pair info, plus a daily on-chain price series for the past month, alongside OKX’s daily candles for the same pair. From there I’m hoping to crunch a correlation coefficient and call out any days where the on-chain price was off by more than 2%. And as a final touch, a quick rundown of the last ten swaps in that pool—volumes and types grouped by day—would really seal the deal. I need real numbers and dates so I can show my team something solid, not just gut feelings. Does that make sense?\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "This task requires a strict sequential and cross-server workflow:\n\n• Step 1 → getStats: Establish baseline ecosystem metrics.\n• Step 2 → getNetworks: Must always run first to obtain valid network IDs; we verify “ethereum” exists.\n• Step 3 → getNetworkDexes: Consumes network=“ethereum”; paginates through pages to find which DEX has the highest pool count field (in output meta).\n• Step 4 → getDexPools: Feeds “ethereum” and chosen dex ID; sorted by volume_usd desc; select index 0.\n• Step 5 → getPoolDetails: Uses network and poolAddress from the top pool to fetch constituent token addresses.\n• Step 6 → getTokenDetails: Two parallel calls (one per tokenAddress) on the same network; results yield symbol and decimals for OKX instrument construction.\n• Step 7 → getPoolOHLCV: Uses network and poolAddress; start=\"past 30 days\", interval=\"24h\"; returns daily price series.\n• Steps 8–9 → OKX get_candlesticks: Cross-server dependency: derive instrument from Paprika token symbols (token0-symbol + “-” + token1-symbol); fetch 1D bars for past 30 days.\n• Step 10–11: Post-processing: correlate time-aligned close prices; compute Pearson coefficient; detect absolute divergence >2% per day.\n• Step 12 → getPoolTransactions: Final sequential call using network and poolAddress; limit=10; summarizes volumes and types by date.\n\nCritical decision points:\n- Choosing the DEX with the largest pool count from getNetworkDexes output.\n- Selecting the top pool by descending volume from getDexPools.\n- Instrument string formation for OKX based directly on Paprika token symbols.\n\nParallel vs sequential:\n- Token detail fetches can run in parallel once poolDetails returns.\n- All other steps form a strict chain.\n\nCross-server dependency:\n- Paprika token metadata drives OKX instrument queries.\n- Paprika OHLCV and OKX candlesticks are cross-validated via correlation and divergence analysis.",
+          "distraction_servers": [
+            "BioMCP",
+            "Car Price Evaluator",
+            "Math MCP",
+            "Medical Calculator",
+            "Metropolitan Museum",
+            "NASA Data",
+            "NixOS",
+            "Reddit",
+            "Unit Converter",
+            "Weather Data"
+          ]
+        }
+      ],
+      "servers": [
+        "DEX Paprika",
+        "OKX Exchange"
+      ],
+      "combination_name": "Crypto Trading",
+      "combination_type": "two_server_combinations"
+    },
+    {
+      "server_name": "Metropolitan Museum+Wikipedia",
+      "tasks": [
+        {
+          "task_id": "metropolitan_museum_wikipedia_000",
+          "task_description": "Investigate all Claude Monet paintings tagged “Impressionism” in the European Paintings department at the Metropolitan Museum. First, list departments and identify the departmentId for “European Paintings.” Then search for objects with q=\"Impressionism\", departmentId=<found id>, hasImages=true. Retrieve each object’s metadata and image, filter to those where artistDisplayName is “Claude Monet.” For each Monet painting, search Wikipedia for the painting title (fallback to \"painting title + Claude Monet\" if no direct match). For the matched article, get a general summary, a summary focused on “Impressionism,” and a summary of the “Composition” section. Extract the top 3 key facts about composition techniques. Cross-validate the objectDate and medium from the museum metadata against information in the Wikipedia summaries. Produce a report listing for each painting: title, objectDate, medium, image availability, matched Wikipedia article title, general summary, Impressionism-focused summary, composition section summary, 3 key composition facts, and a validation flag indicating whether date and medium match between sources.",
+          "fuzzy_description": "I’ve been putting together a little talk on Monet’s Impressionist works and I’m really curious about what the Met has in its European Paintings section. I’m not even sure how many of his pieces there are tagged as “Impressionism” and have images you can actually look at, so could you dig into that catalog for me? Then, for each Monet painting you find, I’d love if you could hunt down the matching Wikipedia entry (and if the title alone doesn’t link, try “painting title + Claude Monet”), grab a quick overview of the work, anything the article says specifically about its Impressionist style, and whatever it says under “Composition.” From that last bit, could you pull out the top three compositional techniques Monet used? Oh, and one more thing—please double-check that the date and medium the Met lists match what’s on Wikipedia. I need solid, sourced details for my presentation—no guessing, just real metadata and Wikipedia citations, okay?\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "1. list-departments → identify departmentId for “European Paintings.” 2. search-museum-objects(q=\"Impressionism\", departmentId, hasImages=true) → objectIds. 3. For each objectId: get-museum-object → metadata (artistDisplayName, title, objectDate, medium, image). Decision point: filter metadata for artistDisplayName==\"Claude Monet\"; non-Monet paintings are dropped. 4. For each Monet painting: Wikipedia:search_wikipedia(query=objectTitle, limit=5) → candidate article titles. Decision: if no exact title match, fallback to search with \"objectTitle + Claude Monet.\" 5. For selected article: Wikipedia:get_summary(title) for overall context. 6. Wikipedia:summarize_article_for_query(title, query=\"Impressionism\") → focused summary. 7. Wikipedia:get_sections(title) → list sections; decision: locate \"Composition\" or similar section. 8. Wikipedia:summarize_article_section(title, section_title=\"Composition\") → composition summary. 9. Wikipedia:extract_key_facts(title, topic_within_article=\"Composition techniques\", count=3) → key composition facts. 10. Cross-server validation: compare museum metadata (objectDate, medium) with facts in Wikipedia summaries; flag matches or discrepancies. Sequential chain: departments → search objects → fetch objects → per-object Wikipedia fetches → per-article summaries and fact extraction → final report. Cross-server dependency: museum metadata drives Wikipedia query parameters and cross-validates factual consistency. Parallelism: steps 4–9 can run independently for each Monet painting after initial filtering.",
+          "distraction_servers": [
+            "Bibliomantic",
+            "BioMCP",
+            "Context7",
+            "DEX Paprika",
+            "FruityVice",
+            "Game Trends",
+            "Huge Icons",
+            "Hugging Face",
+            "NASA Data",
+            "OKX Exchange"
+          ]
+        }
+      ],
+      "servers": [
+        "Metropolitan Museum",
+        "Wikipedia"
+      ],
+      "combination_name": "Cultural Knowledge",
+      "combination_type": "two_server_combinations"
+    },
+    {
+      "server_name": "Metropolitan Museum+Wikipedia",
+      "tasks": [
+        {
+          "task_id": "metropolitan_museum_wikipedia_001",
+          "task_description": "Evaluate the representation and historical context of New Kingdom Egyptian chairs in the Metropolitan Museum of Art and compare their materials and design features against scholarly descriptions from Wikipedia.\n\nSteps:\n1. List all Met Museum departments to find the ID for “Egyptian, Classical, Ancient Near Eastern Art.”\n2. Search that department for objects with query “chair” and images.\n3. Retrieve details for the first three matching chairs and extract their “Period” and “Materials.”\n4. Filter those chairs by “New Kingdom” in their period. If fewer than two qualify, repeat search in the same department for “stool” and “footrest” with images, and gather until two New Kingdom items are found.\n5. From the two New Kingdom chairs, select the one with the richest materials list as the representative artifact.\n6. Search Wikipedia for “Ancient Egyptian furniture” (limit 5) and select the article titled “Ancient Egyptian furniture.”\n7. Get the summary of that article.\n8. Extract the top five key facts focused on “New Kingdom” furniture.\n9. Retrieve the sections of the article and summarize the “Construction and materials” section (max_length 150).\n10. Get up to five related topics for further scholarly context.\n11. Compare the materials list of the Met chair against the Wikipedia key facts materials. Flag any materials present in the artifact but not mentioned in the Wikipedia facts as potential anomalies.\n\nProduce a structured report including:\n- Department name and ID\n- List of candidate chairs (ID, title, period, materials)\n- Selected representative chair (with image URL) and its metadata\n- Wikipedia summary\n- Extracted key facts on New Kingdom furniture\n- Summarized “Construction and materials” section\n- Related topics\n- Comparison table of materials with anomalies flagged",
+          "fuzzy_description": "I’m putting together a small art-history spotlight on seating in New Kingdom Egypt—specifically what’s on view at the Met—and I’m a bit stuck on how to pull everything together. My professor wants me to pick out an example piece from the Met’s Egyptian section, but I’m not even sure what they call that department or how to find chairs with pictures in their collection. Once I have a few candidates, I need to know their dates (make sure they’re really New Kingdom) and exactly what they’re made of. If there aren’t enough chairs, I might have to slip in a stool or footrest to hit at least two examples, and then choose the one with the most elaborate materials list as my main focus.\n\nAfter that, I have to see what Wikipedia says about Ancient Egyptian furniture—grab the article summary, pull out the top five insights specifically about New Kingdom pieces, and boil down the “Construction and materials” bit into a quick blurb. It’d also help to know a handful of related topics I could mention for extra context. Finally, I need to check if my chosen Met object uses any materials that don’t show up in those Wikipedia facts—those could be neat anomalies to point out.\n\nI really need actual Met IDs, image links, periods, materials lists, the Wikipedia summary, key New Kingdom facts, that short construction/materials paragraph, related topics, and a note on any unmatched materials. Can you help me track it all down? I can’t go to my professor with guesses—gotta have real data or solid sources.\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "Key tool chains and data flow:\n• Sequential chain: list-departments → obtain departmentId → search-museum-objects with departmentId → get-museum-object for metadata extraction → conditional filtering → optional repeated search-museum-objects → selection of representative object → get-museum-object (with returnImage) → Wikipedia:search_wikipedia → Wikipedia:get_summary → Wikipedia:extract_key_facts → Wikipedia:get_sections → Wikipedia:summarize_article_section → Wikipedia:get_related_topics.\n\nCritical decision points:\n• After initial chair search, filter by period “New Kingdom.” If fewer than two items, trigger a fallback search for “stool” and “footrest.”\n• Selection of the representative artifact based on the length of materials list.\n• Matching of materials against Wikipedia key facts to flag anomalies.\n\nParallel vs sequential requirements:\n• Parallel: Retrieving details for the first three chairs can happen in parallel to speed metadata extraction.\n• Sequential: Wikipedia calls must follow after selecting representative chair.\n\nCross-server dependencies:\n• Met Museum departmentId output feeds into Met Museum search.\n• Met Museum object metadata (period, materials) influences Wikipedia queries (focus on New Kingdom furniture).\n• Wikipedia key facts and section summaries are cross-validated against Met object materials to identify anomalies.\n\nThis workflow demands tight dependencies across tools and conditional branching that cannot be completed without understanding each tool’s inputs and outputs.",
+          "distraction_servers": [
+            "Bibliomantic",
+            "Call for Papers",
+            "DEX Paprika",
+            "Game Trends",
+            "Hugging Face",
+            "Medical Calculator",
+            "Movie Recommender",
+            "OSINT Intelligence",
+            "Reddit",
+            "Unit Converter"
+          ]
+        }
+      ],
+      "servers": [
+        "Metropolitan Museum",
+        "Wikipedia"
+      ],
+      "combination_name": "Cultural Knowledge",
+      "combination_type": "two_server_combinations"
+    },
+    {
+      "server_name": "Scientific Computing+Math MCP",
+      "tasks": [
+        {
+          "task_id": "scientific_computing_math_mcp_000",
+          "task_description": "You are given a 3×3 covariance matrix for three financial assets and a 3×1 expected returns vector. Perform the following steps:\n1. Create the covariance matrix named “cov_matrix” with values [0.04, 0.006, 0.014, 0.006, 0.09, 0.02, 0.014, 0.02, 0.16].\n2. Create the expected returns vector named “exp_returns” with values [0.08, 0.12, 0.10].\n3. View “cov_matrix” to verify its contents.\n4. Compute the determinant of “cov_matrix”.\n   • If the determinant is zero, scale “cov_matrix” in place by a factor of 1.001 and recompute the determinant until it is non-zero.\n5. Compute eigenvalues and right eigenvectors of the (possibly scaled) “cov_matrix”.\n6. Identify the largest and smallest eigenvalues, then compute the condition number = (largest)/(smallest) using Math MCP division.\n   • If the condition number > 100, compute the SVD of “cov_matrix”, then assemble its pseudoinverse by computing 1/singular values (Math MCP division), forming a diagonal matrix, and multiplying V^T, diagonal, and U^T via multiply_matrices and transpose.\n   • Otherwise, compute the regular matrix inverse of “cov_matrix”.\n7. Multiply the inverse or pseudoinverse by “exp_returns” to compute the portfolio weight vector “weights”.\n8. Project “exp_returns” onto the principal eigenvector (the eigenvector corresponding to the largest eigenvalue) using vector_project, naming the result “proj_return”.\n9. Cross-validate that the weights sum to 1 by taking the dot product of “weights” with a ones vector [1,1,1] using vector_dot_product.\n\nProvide:\n- The nonzero determinant after any scaling.\n- The condition number.\n- Whether you used inverse or pseudoinverse.\n- The final inverse or pseudoinverse matrix.\n- The weight vector “weights”.\n- The projected return “proj_return”.\n- The dot-product sum of weights.",
+          "fuzzy_description": "I’m working on a mini portfolio analysis for a class project and could use some help untangling the math. I’ve got three assets with expected returns of 0.08, 0.12 and 0.10, and I estimated their covariance matrix as:\n\n[0.04 0.006 0.014  \n 0.006 0.09 0.02  \n 0.014 0.02 0.16]\n\nWhen I peeked at the determinant, I worried it might be zero or really small, so I thought I might gently bump the whole matrix by 0.1% until it’s safely nonzero. After that, I’d like to get its eigenvalues and eigenvectors, figure out the largest and smallest eigenvalue, and compute the condition number. If it turns out to be over 100, I’ll need to go the SVD route and build a pseudoinverse; otherwise a regular inverse should do. Once I’ve got whichever inverse is appropriate, I want to multiply it by the return vector [0.08, 0.12, 0.10] to see what portfolio weights pop out. I’m also curious to project the return vector onto the principal eigenvector (the one tied to the biggest eigenvalue) and then verify my weights sum to 1 by dotting them with [1,1,1].\n\nCould you walk me through all of that and give me the actual numbers? Specifically:  \n• The nonzero determinant after any tiny scaling  \n• The condition number  \n• Whether you ended up using an inverse or a pseudoinverse  \n• The full inverse (or pseudoinverse) matrix  \n• The final weight vector  \n• The projected return onto that top eigenvector  \n• And the dot‐product sum of the weights  \n\nI really need concrete figures—no hand-waving—because I have to show this to my professor and can’t just say “it works out.” Thanks!",
+          "dependency_analysis": "Inherent dependencies: create_tensor produces both the 3×3 covariance matrix and the 3×1 returns vector, which view_tensor reads. The determinant tool consumes the covariance tensor. The determinant output controls whether scale_matrix is called (if det=0). After scaling, determinant is recomputed on the updated tensor. compute_eigen reads the (possibly scaled) covariance matrix and yields eigenvalues and eigenvectors. Scenario-based branching: the eigenvalue array is processed by selecting max and min values and passed to Math MCP:division to compute the condition number. A decision point tests if condition number>100; if true, svd_decompose is invoked and its output (U, S, V^T) is used with transpose and multiply_matrices and Math MCP:division (for 1/S) to assemble the pseudoinverse. If false, matrix_inverse is invoked. The chosen inverse or pseudoinverse is then multiplied with the returns vector via multiply_matrices. vector_project projects the returns onto the principal eigenvector. Finally, vector_dot_product cross-validates the weight sum. Cross-server dependencies: Sci Computing eigenvalues feed into Math MCP division; the scalar condition number from Math MCP determines which Sci Computing matrix inversion workflow to follow. The entire workflow is sequential with a key decision branch at step 6, but includes iterative loops (re-scaling until det≠0) and cross-validation at the end.",
+          "distraction_servers": [
+            "Bibliomantic",
+            "Context7",
+            "FruityVice",
+            "Hugging Face",
+            "Movie Recommender",
+            "NASA Data",
+            "National Parks",
+            "OpenAPI Explorer",
+            "Reddit",
+            "Wikipedia"
+          ]
+        }
+      ],
+      "servers": [
+        "Scientific Computing",
+        "Math MCP"
+      ],
+      "combination_name": "Science Tools",
+      "combination_type": "two_server_combinations"
+    },
+    {
+      "server_name": "Scientific Computing+Math MCP",
+      "tasks": [
+        {
+          "task_id": "scientific_computing_math_mcp_001",
+          "task_description": "You are given two 3×3 matrices A and B and a 3-element vector v:\n\n• Matrix A: [[4, 2, 1], [0, 3, -1], [2, 0, 1]]\n• Matrix B: [[1, 0, 2], [0, 2, 0], [1, 0, 1]]\n• Vector v: [1, 2, 3]\n\nPerform the following steps, using the provided Scientific Computing and Math MCP tools in sequence:\n\n1. Create tensors A, B, and v in the tensor store.\n2. Compute C = A + B (element-wise addition).\n3. Compute D = C – A (element-wise subtraction).\n4. Compute the inverse of B, B_inv = B⁻¹.\n5. Compute E = D @ B_inv (matrix multiplication).\n6. Compute the eigenvalues and eigenvectors of E.\n7. Perform SVD on E to obtain its singular values.\n8. Compute the condition number κ(E) = (largest singular value)/(smallest singular value) using Math MCP division.\n9. If κ(E) > 5.0, scale E in place by factor α = 1/κ(E) (so the new condition number ≤ 1). Otherwise, leave E unchanged. Use Math MCP division to compute α and Scientific Computing scale_matrix to apply it.\n10. Rename or view the (possibly) scaled matrix as E_scaled. Perform a fresh SVD on E_scaled and recompute κ(E_scaled) to confirm κ(E_scaled) ≤ 5.0.\n11. Change the basis of E_scaled into its eigenvector basis (the Q from the eigen decomposition) using change_basis.\n12. Project the original vector v onto the first eigenvector of E using vector_project.\n13. Compute the dot product between that projection and the original v using vector_dot_product.\n14. Compute the rank and determinant of E_scaled.\n15. Aggregate and return a JSON object with:\n   • eigenvalues (list), eigenvectors (matrix)\n   • original κ(E) and new κ(E_scaled)\n   • whether scaling was applied and the scale factor α\n   • the new basis representation of E_scaled\n   • the projection vector and dot product result\n   • the rank and determinant of E_scaled\n\nThe task must be executed step-by-step, respecting each tool’s input/output dependencies and performing the conditional scaling branch exactly once based on the computed condition number.",
+          "fuzzy_description": "I’m working on a linear algebra exercise for my thesis advisor and could really use some hard numbers. I’ve got two 3×3 matrices—one is  \n[4, 2, 1; 0, 3, –1; 2, 0, 1]  \nand the other is  \n[1, 0, 2; 0, 2, 0; 1, 0, 1]—plus the vector [1, 2, 3].  \n\nWhat I’m trying to do is mix those matrices together, invert that second one, multiply it all out, and then dig into its eigenvalues, eigenvectors, and singular values so I can calculate the condition number. If that condition number comes out above 5.0, I need to scale the matrix by exactly 1 over that number to stabilize it, then check again to make sure it’s under 5. After that I want to switch into the eigenvector basis of the scaled matrix, project my [1, 2, 3] vector onto the top eigenvector, take the dot product with the original [1, 2, 3], and finish by finding the rank and determinant of the scaled matrix.  \n\nCould you walk me through all the key results—every intermediate matrix (sum, inverse, etc.), the eigen- and singular-value details, the original and (if needed) adjusted condition numbers with the exact scaling factor, the basis-transformed matrix, the projection vector, the dot product, plus the final rank and determinant—so I’ve got real data to back up my write-up?\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "Inherent tool chains:\n- create_tensor → view_tensor/delete_tensor for managing stored matrices and vectors.\n- add_matrices & subtract_matrices require two existing tensor names.\n- matrix_inverse requires a square tensor to invert.\n- multiply_matrices takes two existing tensors for A @ B operations.\n- compute_eigen and svd_decompose both consume a stored square matrix and output decompositions.\n- scale_matrix can update an existing tensor in place or return a new tensor.\n- change_basis transforms a matrix given a set of basis vectors.\n- vector_project and vector_dot_product operate on stored vectors and require explicit vector inputs or other stored vectors.\n- rank and determinant analyze a square tensor’s properties.\n\nScenario-based dependencies:\n- C = A + B must follow create_tensor for A and B. D = C – A follows C’s creation.\n- B_inv = matrix_inverse(B) must wait until B exists.\n- E = multiply_matrices(D, B_inv) depends on both D and B_inv.\n- Eigen and SVD decompositions both consume E; the SVD output feeds into computing the condition number.\n- The computed largest and smallest singular values are extracted and passed to Math MCP:division to compute κ(E).\n- A decision point: if κ(E) > 5.0 (numeric comparison), then compute α = division(1.0, κ(E)) and call scale_matrix(name=E, scale_factor=α, in_place=true).\n- Following scaling, we re-decompose E_scaled with svd_decompose to verify κ(E_scaled) ≤ 5.0.\n- change_basis uses eigenvectors from compute_eigen; vector_project uses the first eigenvector and the stored vector v; vector_dot_product uses the projection output and v.\n- rank and determinant both analyze E_scaled and must follow its final state.\n\nCross-server dependencies:\n- Scientific Computing provides singular values; Math MCP:division is used to compute α = 1/κ(E) and to compute κ(E) itself as max_singular/min_singular.\n- The numeric result from Math MCP:division drives the conditional branch in Scientific Computing (scale_matrix).\n\nSequential vs. Parallel:\n- Most operations are strictly sequential (each step consuming the prior step’s outputs).\n- Eigen decomposition and SVD of E could theoretically run in parallel, but the SVD result is needed for the condition check, so they are sequenced.\n\nCritical decision points:\n- Determining whether κ(E) > 5.0.\n- Selecting whether to call scale_matrix or skip it.\n- Verifying post-scale condition number.\n\nThis task cannot be completed without understanding the chain: creation → basic algebra → inversion → multiplication → decomposition → cross-server arithmetic → conditional scaling → re-analysis → basis change → vector operations → final property extraction.",
+          "distraction_servers": [
+            "BioMCP",
+            "Car Price Evaluator",
+            "DEX Paprika",
+            "FruityVice",
+            "Game Trends",
+            "Google Maps",
+            "Metropolitan Museum",
+            "National Parks",
+            "Paper Search",
+            "Weather Data"
+          ]
+        }
+      ],
+      "servers": [
+        "Scientific Computing",
+        "Math MCP"
+      ],
+      "combination_name": "Science Tools",
+      "combination_type": "two_server_combinations"
+    },
+    {
+      "server_name": "Hugging Face+Paper Search",
+      "tasks": [
+        {
+          "task_id": "hugging_face_paper_search_001",
+          "task_description": "A natural language processing researcher needs to select a lightweight, open‐license transformer for named entity recognition (NER) and pair it with a well‐established NER dataset. Then they want to confirm the dataset’s popularity in recent publications and finally find an interactive Hugging Face Space for live benchmarking. Do the following:\n\n1. Use Hugging Face:search-models with query=\"ner\" and tags=\"token-classification\", limit=10 to retrieve up to 10 candidate NER models.\n2. For each returned model_id, call Hugging Face:get-model-info and filter to those with license exactly \"apache-2.0\" and weight_size (in bytes) less than 2_000_000_000 (≈2 GB).\n3. Use Hugging Face:search-datasets with query=\"ner\" and tags=\"token-classification\", limit=5 to retrieve up to 5 NER datasets.\n4. For each returned dataset_id, call Hugging Face:get-dataset-info and record its total number of examples (sum of all splits).\n5. Select the dataset with the highest total number of examples; call it SELECTED_DATASET.\n6. Cross-validate SELECTED_DATASET’s popularity:\n   a. Call Paper Search:search_arxiv with query=\"SELECTED_DATASET named entity recognition\" and max_results=5.  \n   b. For each returned paper, call Paper Search:read_arxiv_paper to extract text, count how many papers mention SELECTED_DATASET exactly by its dataset_id.  \n   c. If fewer than 3 papers mention SELECTED_DATASET, call Paper Search:search_pubmed with the same query and max_results=5 and count mentions there.  \n   d. Total publication mentions = arXiv_mentions + PubMed_mentions (if any).\n7. Using SELECTED_DATASET, call Hugging Face:search-spaces with query=\"ner-evaluation\" , sdk=\"gradio\" , limit=3 to find interactive demos.\n8. For the top returned space_id, call Hugging Face:get-space-info to retrieve its URL and description.\n\nProduce a final JSON report with keys:\n• selected_models: list of { model_id, license, weight_size }  \n• selected_dataset: { dataset_id, total_examples }  \n• publication_mentions: integer (total from arXiv and PubMed)  \n• interactive_space: { space_id, sdk, url }\n",
+          "fuzzy_description": "I’m knee-deep in a little side project on named entity recognition for my thesis and hitting a wall. I’d love to pick a really lightweight transformer—something under about 2 GB so it doesn’t swallow my laptop—and it has to be full open-license so I can share everything. Then I want to use a “classic” NER dataset with plenty of examples to give my results some weight. On top of that, I’m curious how many recent papers actually mention whichever dataset I choose—you know, to prove it’s still a popular benchmark. Finally, it’d be amazing to play around with a live demo in the browser so I can sanity-check my setup. \n\nCan you walk me through your top recommendations? I’m after the model name/ID, its license type and file size, the dataset name/ID with total example count, a ballpark of how often it’s been cited in the past few months, plus a link to an interactive demo. Really need real numbers and solid sources—I can’t bring vague guesses to my advisor!\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "Inherent dependencies:\n• HF search-models → get-model-info: to filter by license and size.\n• HF search-datasets → get-dataset-info: to retrieve example counts.\n• HF search-spaces → get-space-info: to retrieve space details.\n• Paper Search search_arxiv → read_arxiv_paper: to extract text and count dataset mentions.\n\nScenario‐based dependencies:\n1. The shortlist of model_ids from search-models feeds get-model-info for filtering – a sequential chain.\n2. The dataset_id chosen from get-dataset-info sets the query parameter for search_arxiv and, conditionally, search_pubmed.\n3. arXiv mention count decides whether to invoke PubMed search – a decision branch (if mentions < 3 → fallback to search_pubmed).\n4. The final selected dataset_id also drives the HF search-spaces call (reusing SELECTED_DATASET in the query), linking dataset selection to interactive demo lookup.\n\nParallel vs Sequential:\n• Model filtering chain and dataset discovery chain are two parallel pipelines initially.\n• Cross-validation (search_arxiv, read_arxiv_paper, optional search_pubmed) is a conditional sequential pipeline triggered by dataset selection.\n\nCross-server dependencies:\n• HF dataset_id → Paper Search search_arxiv query.\n• Publication mention results from Paper Search drive a conditional re-query on another Paper Search server (PubMed).\n• HF spaces search uses the HF dataset selection – reinforcing the HF→Paper Search→HF flow.\n\nThis task cannot be completed without following these tool chains, decision points, and cross-server data flows.",
+          "distraction_servers": [
+            "DEX Paprika",
+            "FruityVice",
+            "Game Trends",
+            "Math MCP",
+            "Medical Calculator",
+            "NASA Data",
+            "NixOS",
+            "OpenAPI Explorer",
+            "Reddit",
+            "Unit Converter"
+          ]
+        }
+      ],
+      "servers": [
+        "Hugging Face",
+        "Paper Search"
+      ],
+      "combination_name": "AI Research",
+      "combination_type": "two_server_combinations"
+    },
+    {
+      "server_name": "Hugging Face+Paper Search",
+      "tasks": [
+        {
+          "task_id": "hugging_face_paper_search_002",
+          "task_description": "Develop a production-ready sentiment analysis pipeline for COVID-19 clinical trial reports using Hugging Face Hub resources and academic paper sources. Execute the following steps in order:\n\n1. Use Hugging Face search-models with {\"query\":\"sentiment-analysis\",\"author\":\"huggingface\",\"tags\":\"text-classification\",\"limit\":5} to find 5 candidate models.\n2. From the returned list, take the top 3 model_ids and call get-model-info on each to retrieve model_size (GB), inference_speed (examples/sec), and architecture details.\n3. Use Hugging Face search-datasets with {\"query\":\"clinical trial\",\"tags\":\"text-classification\",\"limit\":3} to find 3 candidate datasets.\n4. For the top 2 dataset_ids, call get-dataset-info to obtain num_examples and label_distribution.\n5. If either dataset has fewer than 1000 examples, re-run search-datasets with {\"query\":\"medical reports\",\"tags\":\"text-classification\",\"limit\":2} to find additional datasets, then call get-dataset-info on those until you have at least two datasets each ≥1000 examples.\n6. Merge the selected datasets and verify total num_examples ≥2000. If still below 2000, perform one more search-datasets with {\"query\":\"healthcare reports\",\"tags\":\"text-classification\",\"limit\":2} and repeat get-dataset-info.\n7. Use Hugging Face search-collections with {\"owner\":\"nvidia\",\"item\":\"datasets\",\"query\":\"covid19\",\"limit\":2} to find up to 2 collections. For each, call get-collection-info to extract included dataset_ids and example counts; if a collection offers ≥500 examples, add it to the merged dataset.\n8. Call get-daily-papers to retrieve today’s list of curated papers. Filter for titles containing “COVID-19” from the past 3 months. If fewer than 5 papers meet this criterion, call Paper Search search_pubmed with {\"query\":\"COVID-19 clinical trial\",\"max_results\":10} and Paper Search search_arxiv with {\"query\":\"COVID-19 clinical trial\",\"max_results\":10} to supplement the list.\n9. For each selected paper:\n   a. If it has an arXiv ID, call download_arxiv with that ID, then read_arxiv_paper to extract full text.\n   b. If it only has a PubMed ID, call download_pubmed (note: PDF download is unsupported) and skip text extraction.\n10. Preprocess all extracted paper texts into a unified corpus of at least 5 documents.\n11. For each of the 3 candidate models from step 2, compute a suitability score = inference_speed (examples/sec) ÷ model_size (GB). Rank models by this score and select the top-scoring model_id.\n12. Use Hugging Face search-spaces with {\"query\":\"covid-sentiment-demo\",\"sdk\":\"gradio\",\"limit\":2} to find existing demo spaces. For each, call get-space-info to identify missing interface features (e.g., batch upload, live metrics).\n13. Propose a new Space configuration. Specify:\n    • space_id: a new name “covid-sentiment-pipeline”\n    • selected_model_id\n    • merged_dataset_ids (list)\n    • corpus_size (number of extracted documents)\n    • inference_config (batch_size, max_length)\n    • gradio components (text_input, sentiment_output, example_selector)\n\nExpected output: A JSON object with keys: selected_model_id, total_dataset_examples, number_of_papers_processed, final_score_ranking (list of model_ids and scores), proposed_space_name, and space_components (listing each configured component).",
+          "fuzzy_description": "Hey, I’ve got to throw together a quick proof-of-concept sentiment tool for COVID-19 clinical trial reports by next week and I’m a bit stuck on the kickoff steps. Basically, I want to pick a few popular pre-trained sentiment models from the usual public hubs, compare how big they are on disk versus how many documents they can process per second, then pick the one that gives me the best speed-to-size trade-off.  \n\nNext, I need to pull together at least 2,000 trial-report texts from open datasets and supplement that with about five real COVID clinical-trial papers from the past three months—if the curated feeds don’t have enough, I’ll have to dive into preprint servers to top up. Once I’ve preprocessed everything into a mini-corpus, I want to spin up a simple web demo that can handle batch uploads and show live sentiment metrics.\n\nIn the end, I need a clear summary I can show my team:  \n• Which model I picked (with its size and throughput)  \n• Total number of data examples I’m working with  \n• How many papers made it into the corpus  \n• A ranking of the candidate models by their speed-to-size ratio  \n• A sketch of the demo’s key features/components  \n\nCould you help me pull together all those numbers and outline the final setup with real, evidence-backed figures? I really need concrete stats to convince everyone this has legs.",
+          "dependency_analysis": "Inherent dependencies:\n- HF: search-models → get-model-info for detailed model metadata.\n- HF: search-datasets → get-dataset-info for dataset statistics.\n- HF: search-collections → get-collection-info to augment datasets.\n- HF: get-daily-papers → identify paper IDs → Paper Search download_arxiv → read_arxiv_paper (text extraction); fallback to search_pubmed when arXiv yields insufficient results.\n- HF: search-spaces → get-space-info to inspect existing demos.\n\nScenario-based dependencies & data flow:\n- Model_info outputs (model_size, inference_speed) feed into a scoring function to rank and select the best model.\n- Dataset_info (num_examples) triggers conditional loops: if <1000 examples, re-search with alternate queries until thresholds (per-dataset ≥1000, total ≥2000) are met.\n- Collection_info outputs provide extra dataset_ids and example counts; adding collections is conditional (≥500 examples).\n- get-daily-papers results determine whether to use arXiv download/read or fallback to PubMed search for paper content.\n- Parallel processing of multiple paper downloads/readers merges into a single text corpus.\n- The corpus size and dataset sizes inform model suitability scoring.\n\nCritical decision points & branches:\n- Dataset size check (<1000) → conditional re-search.\n- Total dataset size check (<2000) → additional search iteration.\n- Paper count check (<5) → fallback searches on PubMed and arXiv.\n- Model scoring → selection of top-scoring model.\n\nCross-server interactions:\n- HF dataset_info thresholds drive additional Paper Search steps if content volume is low.\n- Paper Search content feeds back to HF pipeline for model evaluation.\n- HF Space search validates demo features before proposing a new Space.\n\nThis workflow demands strict sequencing, conditional loops, parallel downloads, cross-validation, and deep chaining across both Hugging Face and Paper Search servers.",
+          "distraction_servers": [
+            "Bibliomantic",
+            "Car Price Evaluator",
+            "DEX Paprika",
+            "FruityVice",
+            "Google Maps",
+            "NASA Data",
+            "OKX Exchange",
+            "OSINT Intelligence",
+            "Reddit",
+            "Wikipedia"
+          ]
+        }
+      ],
+      "servers": [
+        "Hugging Face",
+        "Paper Search"
+      ],
+      "combination_name": "AI Research",
+      "combination_type": "two_server_combinations"
+    },
+    {
+      "server_name": "National Parks+Weather Data",
+      "tasks": [
+        {
+          "task_id": "national_parks_weather_data_000",
+          "task_description": "Using the National Parks and Weather Data tools, plan a 3-day hiking and camping trip within the next 7 days at national parks in California (CA) and Oregon (OR) that offer both hiking and camping. Execute the following sequence:\n1. Search for parks in CA and OR with activities \"hiking,camping\" (limit to 5 parks).\n2. For each park returned:\n   a. Get detailed park information to extract the nearest city name.\n   b. Retrieve current alerts to detect any closures or hazards.\n   c. List available campgrounds to confirm at least one campsite.\n   d. Find upcoming events scheduled within the next 7 days.\n   e. Obtain a 7-day weather forecast for the park’s nearest city.\n3. Exclude any park if it has active closure alerts, no campgrounds, or any forecast day with precipitation chance over 50%.\n4. For remaining parks, compute each park’s average daily high temperature over the forecast period and rank parks from coolest to warmest.\n5. Produce a final JSON itinerary of the top 3 parks, including: parkCode, park name, selected campground name(s), one highlighted event (if any), the forecast day with lowest precipitation chance (day of week and precip %), and the average high temperature.",
+          "fuzzy_description": "I’m trying to plan a quick three-day hiking and camping getaway sometime in the next week, and I can’t decide between parks in Northern California or down in Oregon. Ideally I’d like places that for sure have both trails and campsites open, zero closure alerts or hazards, and generally cool, dry weather—not something that turns into a mudfest or bakes me alive. It’d also be cool if there’s a ranger talk or small event going on, just to mix up the evenings. \n\nCould you help me narrow it down to the top three parks that meet all that? For each spot, I need to know what campground options are actually available, any active alerts to watch out for, the 7-day forecast in the closest town (so I can see which day is driest), and the average daytime high so I can rank them from coolest to warmest. I really need concrete numbers and facts—no guesses—so I can pick the best one with confidence.",
+          "dependency_analysis": "Inherent tool chains:\n- findParks → returns parkCodes → serves as input for getParkDetails, getAlerts, getCampgrounds, getEvents.\n- getParkDetails → yields nearest city name → input for get_weather_forecast_tool.\n- getAlerts, getCampgrounds, getEvents → provide safety, availability, and activity data to filter parks.\n- get_weather_forecast_tool → yields daily high temps and precipitation chance → drives exclusion and ranking logic.\n\nScenario-based dependencies:\n1. The initial findParks call determines which parkCodes to process.\n2. For each parkCode:\n   • getAlerts output triggers a decision: exclude park if any alert status indicates closure.\n   • getCampgrounds output triggers a decision: exclude park if zero campgrounds.\n   • get_weather_forecast_tool output triggers a decision: exclude park if any day’s precipitation chance >50%.\n3. getEvents output is optional but used to highlight one recommended event if available.\n4. Remaining parks feed into a ranking step based on average daily high temperature from forecast tool.\n\nParallel vs. sequential:\n- After findParks, each park’s detail, alerts, campgrounds, events, and forecast calls can run in parallel but results are aggregated for decision branching.\n- Exclusion rules are applied sequentially per park.\n- Final ranking requires combining forecast outputs across parks.\n\nCross-server dependencies:\n- National Parks:getParkDetails provides city context for Weather Data:get_weather_forecast_tool.\n- Weather data informs exclusion and ranking of National Parks candidates.\n\nCritical decision points:\n- Exclude on any closure alert (getAlerts).\n- Exclude if no campgrounds (getCampgrounds).\n- Exclude if forecast precipitation chance >50% on any day (get_weather_forecast_tool).\n- Highlight an event only if getEvents returns one within the next 7 days.\n\nThis chain ensures the task cannot be completed without correctly sequencing and combining National Parks and Weather Data tool calls.",
+          "distraction_servers": [
+            "DEX Paprika",
+            "FruityVice",
+            "Google Maps",
+            "Hugging Face",
+            "Medical Calculator",
+            "Metropolitan Museum",
+            "NixOS",
+            "OpenAPI Explorer",
+            "Reddit",
+            "Scientific Computing"
+          ]
+        }
+      ],
+      "servers": [
+        "National Parks",
+        "Weather Data"
+      ],
+      "combination_name": "Travel Weather",
+      "combination_type": "two_server_combinations"
+    },
+    {
+      "server_name": "National Parks+Weather Data",
+      "tasks": [
+        {
+          "task_id": "national_parks_weather_data_001",
+          "task_description": "You are planning a 3-day hiking and camping trip to the top 3 national parks in Utah that offer both hiking and camping. For each park you must: 1) identify the park via `findParks` using stateCode=\"UT\" and activities=\"hiking,camping\" (limit=3); 2) get detailed information with `getParkDetails`; 3) retrieve current alerts with `getAlerts`; 4) list available campgrounds via `getCampgrounds`; 5) find upcoming events over the next 7 days with `getEvents` (dateStart=\"today\", dateEnd=\"in 7 days\"); 6) fetch visitor center details via `getVisitorCenters`; 7) extract the primary park city from the park details, normalize the city name using `search_locations_tool`, then obtain the current weather (`get_current_weather_tool` and validate temperature with `get_live_temp`) and a 7-day forecast (`get_weather_forecast_tool` with days=7) for that city. Finally, for each park, if any day in the 7-day forecast shows a precipitation probability >50%, identify indoor visitor centers by re-querying `getVisitorCenters` with q=\"indoor\"; otherwise recommend the best 3 hiking events (from the events list) that coincide with days forecasted as dry. Produce a consolidated JSON report listing for each park: park name, code, summary of alerts, top 2 campgrounds, 3-day weather outlook, recommended hiking days/events or indoor visitor center alternatives, and visitor center hours.",
+          "fuzzy_description": "Hey, I’m planning a three-day hiking and camping trip through Utah’s three biggest parks that let you both sleep under the stars and hit some great trails. For each one, I’d love to know:\n\n• Any alerts or advisories I should watch out for  \n• Which campgrounds are really worth booking (top two, ideally)  \n• What events or ranger programs are happening in the next week  \n• The visitor center hours and whether they’ve got indoor exhibits—just in case it pours  \n• A simple three-day weather snapshot for the nearest town so I can pick my dry-day hikes  \n\nAt the end, I’d like a quick recommendation: if it looks like rain, point me to indoor visitor center options; if it’s clear, suggest the three best hiking events to join. Oh, and please give me each park’s official name and code so I can double-check details when I book. I really need solid numbers and dates—can’t just go on gut feelings here. Thanks!\n\nPlease ensure all findings are supported by concrete data and verifiable sources. I need specific numbers and evidence, not generalizations.",
+          "dependency_analysis": "Inherent & Scenario-Based Dependencies:\n\n1. Sequential Search → Detail Chain (National Parks server):\n   • Use `findParks` (stateCode=\"UT\", activities=\"hiking,camping\", limit=3) to select the top 3 parks.  \n   • For each returned parkCode:\n     – Call `getParkDetails` to retrieve name, location (including primary city).  \n     – Call `getAlerts` (parkCode) to capture closures or hazards.  \n     – Call `getCampgrounds` (parkCode) to list campsite options.  \n     – Call `getEvents` (parkCode, dateStart=\"today\", dateEnd=\"in 7 days\") for upcoming programs.  \n     – Call `getVisitorCenters` (parkCode) to list facilities and hours.\n\n2. Cross-Server Location → Weather Chain:\n   • Extract the primary city field from each `getParkDetails` response.  \n   • Normalize/validate city name with `search_locations_tool` (query = extracted city).  \n   • Use normalized city for:\n     – `get_current_weather_tool` (city) for current conditions.  \n     – `get_live_temp` (city) to cross-validate legacy temperature data.  \n     – `get_weather_forecast_tool` (city, days=7) for a 7-day outlook.\n\n3. Conditional & Iterative Decision Points:\n   • Analyze forecast output: if any day has precipitation probability >50%, branch to find indoor activities:\n     – Re-call `getVisitorCenters` (parkCode, q=\"indoor\") to identify centers with indoor exhibits.  \n   • Else, branch to recommend hiking events:\n     – Filter the original `getEvents` list for events occurring on days with no rain forecast and pick the top 3 by attendance or popularity.\n\n4. Parallel vs. Sequential:\n   • Park-specific data calls (`getAlerts`, `getCampgrounds`, `getEvents`, `getVisitorCenters`) can run in parallel per parkCode.  \n   • Weather calls depend on normalized city from `search_locations_tool`, which itself depends on `getParkDetails` output.\n\n5. Cross-Validation & Fallbacks:\n   • Cross-validate current temperature from `get_current_weather_tool` against `get_live_temp`. If discrepancy >3 °C, log a warning.  \n   • Use relative dates (\"today\", \"in 7 days\") and fixed days parameter (7) to keep the task self-contained and executable without external input.",
+          "distraction_servers": [
+            "DEX Paprika",
+            "FruityVice",
+            "Google Maps",
+            "NixOS",
+            "OSINT Intelligence",
+            "OpenAPI Explorer",
+            "Paper Search",
+            "Reddit",
+            "Scientific Computing",
+            "Unit Converter"
+          ]
+        }
+      ],
+      "servers": [
+        "National Parks",
+        "Weather Data"
+      ],
+      "combination_name": "Travel Weather",
+      "combination_type": "two_server_combinations"
+    }
+  ]
+}

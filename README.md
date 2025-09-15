@@ -7,6 +7,81 @@
 
 ![MCP-Bench](./images/mcpbench_intro.png)
 
+## 🍴 Fork Instructions
+
+To run the code in this project, first, create a Python virtual environment using e.g. `uv`.
+To install `uv`, follow the [UV Installation Guide](https://docs.astral.sh/uv/getting-started/installation/).
+
+
+```shell
+uv self update
+uv venv mcpbench --python 3.11 && source mcpbench/bin/activate && uv pip install --upgrade pip
+```
+
+Next, install vLLM:
+
+```shell
+uv pip install vllm==0.10.0
+```
+
+Then install the MCP dependencies:
+
+```shell
+pushd mcp_servers && bash ./install-no-sudo.sh && popd
+```
+
+**Configure MCP Server API Keys**
+
+Some MCP servers require external API keys to function properly. These keys are automatically loaded from `./mcp_servers/api_key`. You should set these keys by yourself in file `./mcp_servers/api_key`:
+
+```bash
+# View configured API keys
+cat ./mcp_servers/api_key
+```
+
+One of these keys is a `HF_TOKEN`, so Lewis has created a [dummy user `h4-bot`](https://huggingface.co/h4-bot) with limited Hub access. You can find the rest of the keys on the HFC [/fsx/lewis/git/hf/mcp-bench/mcp_servers/api_key](/fsx/lewis/git/hf/mcp-bench/mcp_servers/api_key).
+
+**Test everything works**
+
+Spin up a vLLM server:
+
+```sh
+vllm serve Qwen/Qwen3-4B-Instruct-2507 \
+    --port 8000 --host 0.0.0.0 \
+    --enable-auto-tool-choice --tool-call-parser hermes
+```
+
+> [!NOTE]
+> Make sure the tool-call-parser is configured correctly - otherwise, you will get garbage results! See the [vLLM docs](https://docs.vllm.ai/en/stable/features/tool_calling.html).
+
+Then run the test benchmark:
+
+```sh
+HUGGINGFACE_BASE_URL="http://localhost:8000/v1" python run_benchmark.py --models huggingface --tasks-file tasks/test.json --distraction-count 0 --disable-judge-stability
+```
+
+If everything works, you'll see the results stored in `benchmark_results_{timestamp}.json`.
+
+To run on all or a subset of tasks run:
+
+```sh
+export HUGGINGFACE_BASE_URL="http://localhost:8000/v1"
+## run all tasks
+python run_benchmark.py --models huggingface
+
+## single server tasks
+python run_benchmark.py --models huggingface \
+--tasks-file tasks/mcpbench_tasks_single_runner_format.json
+
+## two server tasks
+python run_benchmark.py --models huggingface \
+--tasks-file tasks/mcpbench_tasks_multi_2server_runner_format.json
+
+## three server tasks
+python run_benchmark.py --models huggingface \
+--tasks-file tasks/mcpbench_tasks_multi_3server_runner_format.json
+```
+
 ## Overview
 
 MCP-Bench is a comprehensive evaluation framework designed to assess Large Language Models' (LLMs) capabilities in tool-use scenarios through the Model Context Protocol (MCP). This benchmark provides an end-to-end pipeline for evaluating how effectively different LLMs can discover, select, and utilize tools to solve real-world tasks.
